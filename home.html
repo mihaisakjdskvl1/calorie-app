@@ -625,7 +625,7 @@
     // Streak (placeholder)
     document.getElementById('streakCount').textContent = '1';
     // Load macro goals from summary
-    function loadGoals() {
+    window.loadGoals = function() {
       // Folosește aceleași valori ca pe summary.html
       const custom = JSON.parse(localStorage.getItem('custom_macros')||'{}');
       let calories = custom.calories;
@@ -1074,6 +1074,18 @@
             localStorage.setItem('subscribed','1');
             paywall.style.display = 'none';
             document.body.style.overflow = '';
+            // Restaurează imediat progresul după modificare
+            setTimeout(function() {
+              restoreUserProgress();
+              // Reîncarcă dashboard-ul cu valorile salvate
+              if(window.updateMacrosAndLogs) {
+                window.updateMacrosAndLogs();
+              }
+              // Reîncarcă și goalurile pentru a se asigura că folosesc custom_macros
+              if(window.loadGoals) {
+                window.loadGoals();
+              }
+            }, 100);
             alert('Acces deblocat cu succes! Progresul tău a fost păstrat.');
           } else {
             alert('Parolă greșită!');

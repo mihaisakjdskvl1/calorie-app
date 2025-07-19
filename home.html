@@ -105,6 +105,33 @@
       font-weight: 600;
     }
     .streak i { color: var(--main-yellow); }
+    
+    /* Support button */
+    .support-btn {
+      background: #fff;
+      border: 2px solid #eee;
+      outline: none;
+      cursor: pointer;
+      padding: 0.3rem 1.1rem;
+      font-size: 1rem;
+      color: #111;
+      margin-left: 0.7rem;
+      border-radius: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .support-btn:hover {
+      background: #f8f9fa;
+      border-color: #ddd;
+    }
+    
+    .support-btn i {
+      color: #666;
+    }
     /* Calendar */
     .calendar {
       display: flex;
@@ -529,6 +556,7 @@
     <div class="top-bar">
       <div class="logo"><i class="fas fa-apple-alt"></i> Cal Al</div>
       <div class="streak"><i class="fas fa-fire"></i> <span id="streakCount">1</span></div>
+      <button id="supportBtn" class="support-btn" onclick="openSupportModal()"><i class="fas fa-headset"></i> Support</button>
       <button id="loginBtn" style="background:#fff;border:2px solid #eee;outline:none;cursor:pointer;padding:0.3rem 1.1rem 0.3rem 1.1rem;font-size:1.1rem;color:#111;margin-left:0.7rem;border-radius:1.2rem;font-weight:700;display:none;gap:0.5rem;align-items:center;"><i class="fas fa-user"></i> Login</button>
       <img id="userAvatar" src="" alt="Avatar" style="display:none;width:38px;height:38px;border-radius:50%;margin-left:0.7rem;object-fit:cover;border:2px solid #eee;" />
       <button id="logoutBtn" title="Logout" style="background:none;border:none;outline:none;cursor:pointer;padding:0.3rem 0.7rem 0.3rem 0.7rem;font-size:1.3rem;color:#888;margin-left:0.7rem;"><i class="fas fa-sign-out-alt"></i></button>
@@ -558,6 +586,24 @@
         <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.2rem;">Autentificare necesară</h2>
         <div style="font-size:1.1rem;margin-bottom:1.5rem;">Trebuie să te loghezi cu Google pentru a folosi aplicația.</div>
         <button id="forceLoginBtn" style="background:#111;color:#fff;border:none;border-radius:1.2rem;padding:1rem 2.2rem;font-size:1.1rem;font-weight:700;cursor:pointer;">Loghează-te cu Google</button>
+      </div>
+    </div>
+    
+    <!-- Modal Support -->
+    <div id="supportModal" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.65);z-index:4000;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:1.5rem;max-width:370px;width:95vw;margin:auto;padding:2.2rem 1.5rem 1.5rem 1.5rem;box-shadow:0 4px 32px 0 rgba(0,0,0,0.13);position:relative;text-align:center;">
+        <button onclick="closeSupportModal()" style="position:absolute;right:1.1rem;top:1.1rem;background:none;border:none;font-size:1.3rem;color:#888;cursor:pointer;">&times;</button>
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.2rem;">Support & Contact</h2>
+        <div style="font-size:1.1rem;margin-bottom:1.5rem;line-height:1.5;">
+          Ai o problemă sau o întrebare?<br>
+          Contactează-ne pe Instagram pentru suport rapid!
+        </div>
+        <button onclick="contactInstagram()" style="background:linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#fff;border:none;border-radius:1.2rem;padding:1rem 2.2rem;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.7rem;width:100%;margin-bottom:1rem;">
+          <i class="fab fa-instagram"></i> Contactează pe Instagram
+        </button>
+        <div style="font-size:0.95rem;color:#888;margin-top:1.2rem;">
+          Răspundem în maxim 24 de ore! 📱
+        </div>
       </div>
     </div>
     <div class="calendar" id="calendar"></div>
@@ -1185,6 +1231,37 @@
       // Butonul Login din top-bar folosește aceeași funcție
       var loginBtn = document.getElementById('loginBtn');
       if(loginBtn) loginBtn.onclick = googleLoginHandler;
+      
+      // Funcții pentru modalul de support
+      window.openSupportModal = function() {
+        var modal = document.getElementById('supportModal');
+        if(modal) modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      };
+      
+      window.closeSupportModal = function() {
+        var modal = document.getElementById('supportModal');
+        if(modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+      };
+      
+      window.contactInstagram = function() {
+        // Înlocuiește cu username-ul tău de Instagram
+        var instagramUsername = 'your_instagram_username'; // Schimbă aici cu username-ul tău real
+        var message = encodeURIComponent('Salut! Am o întrebare despre aplicația Cal Al. Poți să mă ajuți?');
+        var instagramUrl = 'https://www.instagram.com/' + instagramUsername + '/?igshid=YmMyMTA2M2Y=';
+        
+        // Deschide Instagram în tab nou
+        window.open(instagramUrl, '_blank');
+        
+        // Închide modalul
+        closeSupportModal();
+        
+        // Afișează un mesaj de confirmare
+        setTimeout(function() {
+          alert('Instagram a fost deschis! Trimite-ne un mesaj direct cu întrebarea ta. 📱');
+        }, 500);
+      };
     });
   </script>
 </body>

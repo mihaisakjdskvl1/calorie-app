@@ -159,6 +159,11 @@
   </style>
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+      window.location.href = 'home.html';
+    }
+  </script>
   <div class="container">
     <button class="back-btn" onclick="window.location.href='gender-selection.html'" aria-label="Back">&#8592;</button>
     <div class="title">When were you born?</div>

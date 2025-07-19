@@ -100,16 +100,55 @@
   </style>
 </head>
 <body>
-  <script>
-    // Dacă userul e logat și are configurare completă, mergi direct la home
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
-      window.location.href = 'home.html';
-    }
-  </script>
   <div class="container">
     <img class="welcome-img" src="https://images.unsplash.com/photo-1592415486689-125cbbfcbee2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sandwich welcome image">
     <div class="headline">Calorie tracking made easy</div>
     <button class="get-started-btn" onclick="window.location.href='value-prop.html'">Get Started</button>
+    <button id="loginGoogleBtn" class="get-started-btn" style="background:#fff;color:#111;border:2px solid #FFD600;margin-top:0.5rem;display:flex;align-items:center;justify-content:center;gap:0.7rem;" type="button">
+      <span style="font-size:1.2rem;">🔒</span> Logare cu Google
+    </button>
+    <div id="debugMsg" style="margin-top:1.5rem;color:#d00;font-size:1.1rem;text-align:center;"></div>
   </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    // Redirect după ce s-a afișat containerul
+    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+      window.location.href = 'home.html';
+    } else {
+      var debug = document.getElementById('debugMsg');
+      debug.textContent = 'Nu ești logat sau nu ai configurare completă. Folosește butoanele de mai sus!';
+    }
+    // Inițializează Firebase dacă nu există deja
+    if (!window.firebase || !firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyCrIsRUiKYGKyrD8i0wDa3SRZDNrlp2H_E",
+        authDomain: "logare-d7168.firebaseapp.com",
+        projectId: "logare-d7168",
+        storageBucket: "logare-d7168.appspot.com",
+        messagingSenderId: "575737128202",
+        appId: "1:575737128202:web:666bb22b5048f1030886f3",
+        measurementId: "G-DKJVYKE0H9"
+      });
+    }
+    var loginBtn = document.getElementById('loginGoogleBtn');
+    if(loginBtn) {
+      loginBtn.onclick = function() {
+        if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+          window.location.href = 'home.html';
+          return;
+        }
+        var provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).then(function(res){
+          var user = res.user;
+          localStorage.setItem('logged_in','1');
+          localStorage.setItem('user_id', user.uid);
+          window.location.href = 'home.html';
+        }).catch(function(e){
+          alert(e.message);
+        });
+      }
+    }
+  </script>
 </body>
 </html> 

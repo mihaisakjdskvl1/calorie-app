@@ -125,6 +125,11 @@
   </style>
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+      window.location.href = 'home.html';
+    }
+  </script>
   <div class="container">
     <button class="back-btn" onclick="window.location.href='welcome.html'" aria-label="Back">&#8592;</button>
     <div class="title">Cal AI creates<br>long-term results</div>

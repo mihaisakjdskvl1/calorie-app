@@ -256,6 +256,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+      window.location.href = 'home.html';
+    }
+  </script>
   <div class="container">
     <button class="back-btn" onclick="window.location.href='birthdate.html'" aria-label="Back">&#8592;</button>
     <div class="checkmark"><i class="fas fa-check"></i></div>

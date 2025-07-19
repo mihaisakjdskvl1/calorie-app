@@ -1,5 +1,50 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body { font-family: 'Manrope', Arial, sans-serif; margin:0; padding:0; }
+      #result { max-width: 100vw; }
+      .ai-img {
+        display: block;
+        margin: 1.2rem auto 1rem auto;
+        max-width: 350px;
+        width: 90vw;
+        border-radius: 1.2rem;
+        box-shadow: 0 2px 12px #0002;
+        height: auto;
+      }
+      .ai-content {
+        margin: 0 auto;
+        max-width: 430px;
+        text-align: left;
+        font-size: 1.1rem;
+      }
+      .ai-content h3 { font-size: 1.3rem; margin-bottom: 0.7rem; }
+      .ai-content b { font-size: 1.05rem; }
+      #addAgendaBtn {
+        margin-top: 1.2rem;
+        padding: 0.8rem 1.2rem;
+        font-size: 1.05rem;
+        border: none;
+        border-radius: 1.5rem;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        width: 100%;
+        max-width: 320px;
+        display: block;
+      }
+      @media (max-width: 600px) {
+        .ai-img { max-width: 95vw; width: 95vw; margin: 0.7rem auto 0.7rem auto; }
+        .ai-content { font-size: 0.98rem; }
+        .ai-content h3 { font-size: 1.08rem; }
+        .ai-content b { font-size: 0.98rem; }
+        #addAgendaBtn { font-size: 0.98rem; padding: 0.7rem 0.7rem; }
+      }
+    </style>
+  </head>
   <body style="margin:0;padding:0;">
     <div id="result"></div>
     <script>
@@ -41,8 +86,8 @@
         setTimeout(function() { window.location.href = 'home.html'; }, 900);
       }
       document.getElementById('result').innerHTML = `
-        <img src='${imgData}' alt='Poza aliment' style='display:block;margin:2rem auto 1.5rem auto;max-width:90vw;border-radius:1.2rem;box-shadow:0 2px 12px #0002;'>
-        <div style='margin:0 auto;max-width:430px;text-align:left;'>
+        <img src='${imgData}' alt='Poza aliment' class='ai-img'>
+        <div class='ai-content'>
           <h3>Rezultat analiză</h3>
           <b>Descriere:</b><br>${output.description || ''}<br><br>
           <b>Sugestie sănătate:</b><br>${output.health_suggestion || ''}<br><br>
@@ -51,7 +96,7 @@
           <b>Proteine:</b> ${parseFloat(output.protein) || 0}g<br>
           <b>Grăsimi:</b> ${parseFloat(output.fats) || parseFloat(output.fat) || 0}g
           <br><br>
-          <button id='addAgendaBtn' style='margin-top:1.5rem;padding:0.9rem 2.2rem;font-size:1.1rem;border:none;border-radius:1.5rem;background:#111;color:#fff;cursor:pointer;font-weight:700;width:100%;max-width:320px;'>Adaugă în agendă</button>
+          <button id='addAgendaBtn'>Adaugă în agendă</button>
         </div>
       `;
       document.getElementById('addAgendaBtn').onclick = adaugaInAgenda;

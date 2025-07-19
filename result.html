@@ -2,51 +2,171 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rezultat Analiză AI</title>
     <style>
-      body { font-family: 'Manrope', Arial, sans-serif; margin:0; padding:0; }
-      #result { max-width: 100vw; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Manrope', Arial, sans-serif;
+        background: #f8f9fa;
+        color: #333;
+        line-height: 1.6;
+      }
+      
+      .result-container {
+        max-width: 100vw;
+        padding: 1rem;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      
       .ai-img {
-        display: block;
-        margin: 1.2rem auto 1rem auto;
-        max-width: 350px;
-        width: 90vw;
-        border-radius: 1.2rem;
-        box-shadow: 0 2px 12px #0002;
-        height: auto;
-      }
-      .ai-content {
-        margin: 0 auto;
-        max-width: 430px;
-        text-align: left;
-        font-size: 1.1rem;
-      }
-      .ai-content h3 { font-size: 1.3rem; margin-bottom: 0.7rem; }
-      .ai-content b { font-size: 1.05rem; }
-      #addAgendaBtn {
-        margin-top: 1.2rem;
-        padding: 0.8rem 1.2rem;
-        font-size: 1.05rem;
-        border: none;
-        border-radius: 1.5rem;
-        background: #111;
-        color: #fff;
-        cursor: pointer;
-        font-weight: 700;
         width: 100%;
-        max-width: 320px;
-        display: block;
+        max-width: 280px;
+        height: 280px;
+        object-fit: cover;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
       }
+      
+      .ai-content {
+        width: 100%;
+        max-width: 400px;
+        background: white;
+        border-radius: 1.2rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      }
+      
+      .ai-content h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+      
+      .nutrition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      
+      .nutrition-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.8rem;
+        text-align: center;
+      }
+      
+      .nutrition-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 0.3rem;
+      }
+      
+      .nutrition-label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 600;
+      }
+      
+      .description-section {
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.8rem;
+      }
+      
+      .description-section h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 0.5rem;
+      }
+      
+      .description-text {
+        font-size: 0.95rem;
+        color: #555;
+        line-height: 1.5;
+      }
+      
+      #addAgendaBtn {
+        width: 100%;
+        background: #111;
+        color: white;
+        border: none;
+        border-radius: 1rem;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        transition: background 0.2s;
+      }
+      
+      #addAgendaBtn:hover {
+        background: #333;
+      }
+      
+      .success-message {
+        color: #28a745;
+        font-weight: 600;
+        text-align: center;
+        margin-top: 1rem;
+        padding: 0.8rem;
+        background: #d4edda;
+        border-radius: 0.5rem;
+      }
+      
       @media (max-width: 600px) {
-        .ai-img { max-width: 95vw; width: 95vw; margin: 0.7rem auto 0.7rem auto; }
-        .ai-content { font-size: 0.98rem; }
-        .ai-content h3 { font-size: 1.08rem; }
-        .ai-content b { font-size: 0.98rem; }
-        #addAgendaBtn { font-size: 0.98rem; padding: 0.7rem 0.7rem; }
+        .result-container {
+          padding: 0.8rem;
+        }
+        
+        .ai-img {
+          max-width: 240px;
+          height: 240px;
+          margin-bottom: 1rem;
+        }
+        
+        .ai-content {
+          padding: 1.2rem;
+        }
+        
+        .ai-content h3 {
+          font-size: 1.2rem;
+        }
+        
+        .nutrition-grid {
+          grid-template-columns: 1fr;
+          gap: 0.8rem;
+        }
+        
+        .nutrition-value {
+          font-size: 1.2rem;
+        }
+        
+        #addAgendaBtn {
+          font-size: 1rem;
+          padding: 0.9rem;
+        }
       }
     </style>
   </head>
-  <body style="margin:0;padding:0;">
-    <div id="result"></div>
+  <body>
+    <div class="result-container">
+      <div id="result"></div>
+    </div>
     <script>
       let outputRaw = localStorage.getItem('last_ai_output');
       let imgData = localStorage.getItem('last_ai_image');
@@ -82,21 +202,48 @@
         console.log('LOG SALVAT:', logSalvat);
         logs.unshift(logSalvat);
         localStorage.setItem(dayKey, JSON.stringify(logs));
-        document.getElementById('result').innerHTML += `<div style='color:green;margin-top:1.2rem;'>Adăugat în agendă!</div>`;
-        setTimeout(function() { window.location.href = 'home.html'; }, 900);
+        document.getElementById('result').innerHTML += `<div class='success-message'>✅ Adăugat în agendă cu succes!</div>`;
+        setTimeout(function() { window.location.href = 'home.html'; }, 1500);
       }
       document.getElementById('result').innerHTML = `
         <img src='${imgData}' alt='Poza aliment' class='ai-img'>
         <div class='ai-content'>
-          <h3>Rezultat analiză</h3>
-          <b>Descriere:</b><br>${output.description || ''}<br><br>
-          <b>Sugestie sănătate:</b><br>${output.health_suggestion || ''}<br><br>
-          <b>Calorii:</b> ${parseFloat(output.calories) || 0} kcal<br>
-          <b>Carbohidrați:</b> ${parseFloat(output.carbs) || 0}g<br>
-          <b>Proteine:</b> ${parseFloat(output.protein) || 0}g<br>
-          <b>Grăsimi:</b> ${parseFloat(output.fats) || parseFloat(output.fat) || 0}g
-          <br><br>
-          <button id='addAgendaBtn'>Adaugă în agendă</button>
+          <h3>Rezultat Analiză AI</h3>
+          
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <div class="nutrition-value">${parseFloat(output.calories) || 0}</div>
+              <div class="nutrition-label">Calorii</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value">${parseFloat(output.protein) || 0}g</div>
+              <div class="nutrition-label">Proteine</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value">${parseFloat(output.carbs) || 0}g</div>
+              <div class="nutrition-label">Carbohidrați</div>
+            </div>
+            <div class="nutrition-item">
+              <div class="nutrition-value">${parseFloat(output.fats) || parseFloat(output.fat) || 0}g</div>
+              <div class="nutrition-label">Grăsimi</div>
+            </div>
+          </div>
+          
+          ${output.description ? `
+          <div class="description-section">
+            <h4>Descriere</h4>
+            <div class="description-text">${output.description}</div>
+          </div>
+          ` : ''}
+          
+          ${output.health_suggestion ? `
+          <div class="description-section">
+            <h4>Sugestie Sănătate</h4>
+            <div class="description-text">${output.health_suggestion}</div>
+          </div>
+          ` : ''}
+          
+          <button id='addAgendaBtn'>➕ Adaugă în Agendă</button>
         </div>
       `;
       document.getElementById('addAgendaBtn').onclick = adaugaInAgenda;

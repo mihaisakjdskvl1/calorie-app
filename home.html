@@ -918,12 +918,12 @@
       function getUserId() {
         return localStorage.getItem('user_id') || null;
       }
-      // La fiecare updateMacrosAndLogs, salvează progresul sub cheia user_id
-      var originalUpdateMacrosAndLogs = window.updateMacrosAndLogs;
-      window.updateMacrosAndLogs = function() {
-        if(originalUpdateMacrosAndLogs) originalUpdateMacrosAndLogs();
+      
+      // Funcție pentru salvarea completă a progresului
+      function saveUserProgress() {
         var userId = getUserId();
         if(userId) {
+          // Salvează logurile pentru ultimele 7 zile
           var allLogs = {};
           for(var i=0;i<7;i++) {
             var week = (window.getWeekDays && window.getWeekDays()) || [];
@@ -933,21 +933,78 @@
             }
           }
           localStorage.setItem('progress_' + userId, JSON.stringify(allLogs));
-        }
-      };
-      // La login, dacă există progres salvat pentru user, îl restaurăm
-      var userId = getUserId();
-      if(userId) {
-        var saved = localStorage.getItem('progress_' + userId);
-        if(saved) {
-          try {
-            var logs = JSON.parse(saved);
-            for(var k in logs) {
-              if(logs[k]) localStorage.setItem(k, logs[k]);
-            }
-          } catch(e){}
+          
+          // Salvează și custom_macros
+          var macros = localStorage.getItem('custom_macros');
+          if(macros) localStorage.setItem('macros_' + userId, macros);
+          
+          // Salvează și alte setări importante
+          var settings = {
+            trial_start: localStorage.getItem('trial_start'),
+            subscribed: localStorage.getItem('subscribed'),
+            streak: localStorage.getItem('streak'),
+            last_log_date: localStorage.getItem('last_log_date')
+          };
+          localStorage.setItem('settings_' + userId, JSON.stringify(settings));
         }
       }
+      
+      // Funcție pentru restaurarea completă a progresului
+      function restoreUserProgress() {
+        var userId = getUserId();
+        if(userId) {
+          // Restaurează logurile
+          var saved = localStorage.getItem('progress_' + userId);
+          if(saved) {
+            try {
+              var logs = JSON.parse(saved);
+              for(var k in logs) {
+                if(logs[k]) localStorage.setItem(k, logs[k]);
+              }
+            } catch(e){}
+          }
+          
+          // Restaurează custom_macros
+          var macrosSaved = localStorage.getItem('macros_' + userId);
+          if(macrosSaved) {
+            localStorage.setItem('custom_macros', macrosSaved);
+          }
+          
+          // Restaurează setările
+          var settingsSaved = localStorage.getItem('settings_' + userId);
+          if(settingsSaved) {
+            try {
+              var settings = JSON.parse(settingsSaved);
+              for(var k in settings) {
+                if(settings[k]) localStorage.setItem(k, settings[k]);
+              }
+            } catch(e){}
+          }
+        }
+      }
+      
+      // La fiecare updateMacrosAndLogs, salvează progresul
+      var originalUpdateMacrosAndLogs = window.updateMacrosAndLogs;
+      window.updateMacrosAndLogs = function() {
+        if(originalUpdateMacrosAndLogs) originalUpdateMacrosAndLogs();
+        saveUserProgress(); // Salvează automat la fiecare modificare
+      };
+      
+      // La login, restaurează progresul
+      var userId = getUserId();
+      if(userId) {
+        restoreUserProgress();
+      }
+      
+      // La fiecare modificare de localStorage, salvează progresul
+      var originalSetItem = localStorage.setItem;
+      localStorage.setItem = function(key, value) {
+        originalSetItem.call(this, key, value);
+        // Dacă se modifică ceva important, salvează progresul
+        if(key.includes('log_') || key === 'custom_macros' || key === 'streak') {
+          setTimeout(saveUserProgress, 100);
+        }
+      };
       // Logout rapid
       var logoutBtn = document.getElementById('logoutBtn');
       if(logoutBtn) {
@@ -1012,10 +1069,12 @@
         adminBtn.onclick = function() {
           var parola = prompt('Introdu parola de acces:');
           if(parola === 'Xxx201027') {
+            // Salvează progresul înainte de a modifica subscribed
+            saveUserProgress();
             localStorage.setItem('subscribed','1');
             paywall.style.display = 'none';
             document.body.style.overflow = '';
-            alert('Acces deblocat cu succes!');
+            alert('Acces deblocat cu succes! Progresul tău a fost păstrat.');
           } else {
             alert('Parolă greșită!');
           }

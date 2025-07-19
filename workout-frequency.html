@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout Frequency - Calorie App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-yellow: #FFD600;
+      --main-black: #111;
+      --main-radius: 1rem;
+      --main-font: 'Manrope', 'Rubik', Arial, sans-serif;
+      --gray-bg: #f6f6f6;
+      --gray-hover: #f0f0f0;
+      --gray-disabled: #e0e0e0;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: var(--main-black);
+      font-family: var(--main-font);
+      width: 100vw;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    body {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+    }
+    .container {
+      width: 100vw;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      flex: 1 1 0;
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: none;
+      border: none;
+      font-size: 1.7rem;
+      color: var(--main-black);
+      cursor: pointer;
+      z-index: 2;
+      padding: 0.2rem 0.7rem 0.2rem 0.2rem;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .back-btn:active {
+      background: #eee;
+    }
+    .title {
+      font-family: 'Rubik', 'Manrope', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: left;
+      margin: 3.5rem 0 0.7rem 0;
+      color: var(--main-black);
+      letter-spacing: -0.5px;
+      width: 100%;
+      line-height: 1.15;
+    }
+    .subtitle {
+      font-size: 1.08rem;
+      color: #444;
+      text-align: left;
+      margin-bottom: 2.2rem;
+      font-family: 'Manrope', Arial, sans-serif;
+      font-weight: 500;
+      width: 100%;
+    }
+    .options {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      margin-bottom: 2.2rem;
+    }
+    .option-btn {
+      width: 100%;
+      background: var(--gray-bg);
+      color: var(--main-black);
+      border: 2.5px solid transparent;
+      border-radius: var(--main-radius);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 1.1rem 1.2rem 0.7rem 1.2rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+      outline: none;
+      position: relative;
+    }
+    .option-btn:hover {
+      background: var(--gray-hover);
+    }
+    .option-btn.selected {
+      border: 2.5px solid var(--main-black);
+      background: #fff;
+    }
+    .option-label {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: 'Rubik', Arial, sans-serif;
+    }
+    .option-desc {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #555;
+      font-family: 'Manrope', Arial, sans-serif;
+    }
+    .continue-btn {
+      width: 100%;
+      max-width: 340px;
+      background: var(--main-yellow);
+      color: var(--main-black);
+      border: none;
+      border-radius: var(--main-radius);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1.1rem 0;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+      display: block;
+    }
+    .continue-btn:disabled {
+      background: var(--gray-disabled);
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .continue-btn:active:not(:disabled) {
+      background: #ffe066;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 0 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-btn" onclick="window.location.href='height-weight.html'" aria-label="Back">&#8592;</button>
+    <div class="title">How many workouts do you do per week?</div>
+    <div class="subtitle">This will be used to calibrate your custom plan.</div>
+    <div class="options">
+      <button class="option-btn" data-value="0-2" type="button">
+        <span class="option-label">0-2</span>
+        <span class="option-desc">Workouts now and then</span>
+      </button>
+      <button class="option-btn" data-value="3-5" type="button">
+        <span class="option-label">3-5</span>
+        <span class="option-desc">A few workouts per week</span>
+      </button>
+      <button class="option-btn" data-value="6+" type="button">
+        <span class="option-label">6+</span>
+        <span class="option-desc">Dedicated athlete</span>
+      </button>
+    </div>
+    <button class="continue-btn" id="continueBtn" disabled>Continue</button>
+  </div>
+  <script>
+    const optionBtns = document.querySelectorAll('.option-btn');
+    let selectedValue = null;
+    optionBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        optionBtns.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedValue = btn.getAttribute('data-value');
+        document.getElementById('continueBtn').disabled = false;
+      });
+    });
+    document.getElementById('continueBtn').onclick = function() {
+      if(selectedValue) {
+        localStorage.setItem('user_workout_frequency', selectedValue);
+        window.location.href = 'goal-selection.html';
+      }
+    };
+  </script>
+</body>
+</html> 

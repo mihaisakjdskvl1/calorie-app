@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalii aliment logat</title>
+    <style>
+      body { font-family: 'Manrope', Arial, sans-serif; background: #f7f7f7; margin:0; padding:0; }
+      .container { max-width: 430px; margin: 0 auto; padding: 2rem 1rem; background: #fff; border-radius: 1.2rem; box-shadow: 0 2px 12px #0001; margin-top:2.5rem; }
+      .food-img { display:block; margin:0 auto 1.5rem auto; max-width:90vw; border-radius:1.2rem; box-shadow:0 2px 12px #0002; }
+      .food-title { font-size:1.4rem; font-weight:700; margin-bottom:0.7rem; }
+      .food-time { color:#888; font-size:1.05rem; margin-bottom:1.2rem; }
+      .macro-list { margin:1.2rem 0; }
+      .macro-list div { margin-bottom:0.4rem; font-size:1.08rem; }
+      .suggestion { background:#f6f6f6; border-radius:0.7rem; padding:1rem; color:#333; margin-top:1.2rem; }
+      .back-btn { margin-top:2rem; background:#111; color:#fff; border:none; border-radius:1.5rem; font-size:1.1rem; font-weight:700; padding:0.7rem 2.2rem; cursor:pointer; box-shadow:0 2px 8px 0 rgba(0,0,0,0.07); }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="detail"></div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const day = params.get('day');
+      const idx = parseInt(params.get('idx'));
+      const logs = JSON.parse(localStorage.getItem('log_' + day) || '[]');
+      const log = logs[idx];
+      if (log) {
+        document.getElementById('detail').innerHTML = `
+          ${log.image ? `<img src='${log.image}' class='food-img'>` : ''}
+          <div class='food-title'>${log.food}</div>
+          <div class='food-time'>${log.time || ''}</div>
+          <div class='macro-list'>
+            <div><b>Calorii:</b> ${log.calories || 0} kcal</div>
+            <div><b>Proteine:</b> ${log.protein || 0}g</div>
+            <div><b>Carbohidrați:</b> ${log.carbs || 0}g</div>
+            <div><b>Grăsimi:</b> ${log.fat || 0}g</div>
+          </div>
+          <div class='suggestion'><b>Sugestie AI:</b><br>${log.suggestion || ''}</div>
+          <button class='back-btn' onclick="window.history.back()">Înapoi</button>
+        `;
+      } else {
+        document.getElementById('detail').innerHTML = '<div style="color:#888;">Nu există detalii pentru această înregistrare.</div>';
+      }
+    </script>
+  </body>
+</html> 

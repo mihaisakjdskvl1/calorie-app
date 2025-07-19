@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;">
+    <div id="error" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;background:rgba(0,0,0,0.8);z-index:1000;text-align:center;"></div>
+    <div id="result" style="display:none;"></div>
+    <script>
+      const imgData = localStorage.getItem('pending_upload_image');
+      let lastOutput = null;
+      function showError(msg) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.innerHTML = `<div>${msg}</div><button id='retryBtn' style='margin-top:2rem;padding:0.7rem 2.2rem;font-size:1.1rem;border:none;border-radius:1.5rem;background:#fff;color:#111;cursor:pointer;font-weight:700;'>Încearcă din nou</button>`;
+        errorDiv.style.display = 'flex';
+        document.getElementById('retryBtn').onclick = function() {
+          window.location.href = 'home.html';
+        };
+      }
+      function adaugaInAgenda() {
+        let output = lastOutput;
+        let image = imgData;
+        // fallback dacă variabila nu există
+        if (!output) {
+          output = JSON.parse(localStorage.getItem('last_ai_output') || '{}');
+          image = localStorage.getItem('last_ai_image');
+        }
+        if (!output) return;
+        const today = new Date();
+        const dayKey = 'log_' + today.toDateString();
+        let logs = JSON.parse(localStorage.getItem(dayKey)||'[]');
+        logs.unshift({
+          food: output.description||'Food',
+          calories: output.calories||0,
+          protein: output.protein||0,
+          carbs: output.carbs||0,
+          fat: output.fats||output.fat||0,
+          time: today.getHours().toString().padStart(2,'0')+':'+today.getMinutes().toString().padStart(2,'0'),
+          suggestion: output.health_suggestion||'',
+          image: image || null
+        });
+        localStorage.setItem(dayKey, JSON.stringify(logs));
+        document.getElementById('result').innerHTML += `<div style='color:green;margin-top:1.2rem;'>Adăugat în agendă!</div>`;
+        setTimeout(function() { window.location.href = 'home.html'; }, 900);
+      }
+      if (imgData) {
+        fetch(imgData)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+            const formData = new FormData();
+            formData.append('data', file);
+            fetch('https://imosnoi.app.n8n.cloud/webhook/f4d8209c-e9e6-4f61-8581-75da4a8fbee0', {
+              method: 'POST',
+              body: formData
+            })
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(data => {
+              localStorage.removeItem('pending_upload_image');
+              const output = data.output || (data.response && data.response.output) || data;
+              console.log('OUTPUT:', output);
+              lastOutput = output;
+              localStorage.setItem('last_ai_output', JSON.stringify(output));
+              localStorage.setItem('last_ai_image', imgData);
+              window.location.href = 'result.html';
+            })
+            .catch(err => {
+              showError('❌ Eroare la procesare imagine. Încearcă din nou.');
+              console.error(err);
+            });
+          });
+      }
+    </script>
+  </body>
+</html> 

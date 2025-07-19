@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;">
+    <div id="result"></div>
+    <script>
+      let outputRaw = localStorage.getItem('last_ai_output');
+      let imgData = localStorage.getItem('last_ai_image');
+      if (!outputRaw || !imgData) {
+        document.getElementById('result').innerHTML = `
+          <div style="color:red;margin:2rem auto;text-align:center;max-width:400px;">Nu există date de afișat. Te rugăm să reîncarci o imagine sau să reiei procesul de analiză.</div>
+          <button onclick="window.location.href='home.html'" style="margin-top:2rem;padding:0.9rem 2.2rem;font-size:1.1rem;border:none;border-radius:1.5rem;background:#111;color:#fff;cursor:pointer;font-weight:700;">Înapoi la home</button>
+        `;
+        throw new Error('Fără date pentru afișare');
+      }
+      let output = {};
+      try {
+        output = JSON.parse(outputRaw);
+        if (Array.isArray(output)) output = output[0];
+        if (output && output.output) output = output.output;
+        if (typeof output === 'string') output = JSON.parse(output);
+      } catch (e) { output = {}; }
+      console.log('OUTPUT:', output);
+      function adaugaInAgenda() {
+        const today = new Date();
+        const dayKey = 'log_' + today.toDateString();
+        let logs = JSON.parse(localStorage.getItem(dayKey)||'[]');
+        const logSalvat = {
+          food: output.description||'Food',
+          calories: parseFloat(output.calories)||0,
+          protein: parseFloat(output.protein)||0,
+          carbs: parseFloat(output.carbs)||0,
+          fat: parseFloat(output.fats)||parseFloat(output.fat)||0,
+          time: today.getHours().toString().padStart(2,'0')+':'+today.getMinutes().toString().padStart(2,'0'),
+          suggestion: output.health_suggestion||'',
+          image: imgData || null
+        };
+        console.log('LOG SALVAT:', logSalvat);
+        logs.unshift(logSalvat);
+        localStorage.setItem(dayKey, JSON.stringify(logs));
+        document.getElementById('result').innerHTML += `<div style='color:green;margin-top:1.2rem;'>Adăugat în agendă!</div>`;
+        setTimeout(function() { window.location.href = 'home.html'; }, 900);
+      }
+      document.getElementById('result').innerHTML = `
+        <img src='${imgData}' alt='Poza aliment' style='display:block;margin:2rem auto 1.5rem auto;max-width:90vw;border-radius:1.2rem;box-shadow:0 2px 12px #0002;'>
+        <div style='margin:0 auto;max-width:430px;text-align:left;'>
+          <h3>Rezultat analiză</h3>
+          <b>Descriere:</b><br>${output.description || ''}<br><br>
+          <b>Sugestie sănătate:</b><br>${output.health_suggestion || ''}<br><br>
+          <b>Calorii:</b> ${parseFloat(output.calories) || 0} kcal<br>
+          <b>Carbohidrați:</b> ${parseFloat(output.carbs) || 0}g<br>
+          <b>Proteine:</b> ${parseFloat(output.protein) || 0}g<br>
+          <b>Grăsimi:</b> ${parseFloat(output.fats) || parseFloat(output.fat) || 0}g
+          <br><br>
+          <button id='addAgendaBtn' style='margin-top:1.5rem;padding:0.9rem 2.2rem;font-size:1.1rem;border:none;border-radius:1.5rem;background:#111;color:#fff;cursor:pointer;font-weight:700;width:100%;max-width:320px;'>Adaugă în agendă</button>
+        </div>
+      `;
+      document.getElementById('addAgendaBtn').onclick = adaugaInAgenda;
+    </script>
+  </body>
+</html> 

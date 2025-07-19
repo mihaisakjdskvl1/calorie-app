@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calorie Tracking App - Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-yellow: #FFD600;
+      --main-black: #111;
+      --main-radius: 1rem;
+      --main-font: 'Manrope', 'Rubik', Arial, sans-serif;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: var(--main-black);
+      font-family: var(--main-font);
+      width: 100vw;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    body {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+    }
+    .container {
+      width: 100vw;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      flex: 1 1 0;
+    }
+    .welcome-img {
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 1/1;
+      height: auto;
+      border-radius: var(--main-radius);
+      object-fit: cover;
+      margin: 1.2rem 0 2rem 0;
+      box-shadow: 0 4px 24px 0 rgba(0,0,0,0.07);
+      display: block;
+    }
+    .headline {
+      font-family: 'Rubik', 'Manrope', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 2.5rem;
+      color: var(--main-black);
+      letter-spacing: -0.5px;
+    }
+    .get-started-btn {
+      width: 100%;
+      max-width: 340px;
+      background: var(--main-yellow);
+      color: var(--main-black);
+      border: none;
+      border-radius: var(--main-radius);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1.1rem 0;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+      display: block;
+    }
+    .get-started-btn:active {
+      background: #ffe066;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 0 0.5rem;
+      }
+      .welcome-img {
+        max-width: 95vw;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img class="welcome-img" src="https://images.unsplash.com/photo-1592415486689-125cbbfcbee2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sandwich welcome image">
+    <div class="headline">Calorie tracking made easy</div>
+    <button class="get-started-btn" onclick="window.location.href='value-prop.html'">Get Started</button>
+  </div>
+</body>
+</html> 

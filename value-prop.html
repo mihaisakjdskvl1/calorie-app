@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calorie Tracking App - Value Proposition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-yellow: #FFD600;
+      --main-black: #111;
+      --main-radius: 1rem;
+      --main-font: 'Manrope', 'Rubik', Arial, sans-serif;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: var(--main-black);
+      font-family: var(--main-font);
+      width: 100vw;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    body {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+    }
+    .container {
+      width: 100vw;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      flex: 1 1 0;
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: none;
+      border: none;
+      font-size: 1.7rem;
+      color: var(--main-black);
+      cursor: pointer;
+      z-index: 2;
+      padding: 0.2rem 0.7rem 0.2rem 0.2rem;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .back-btn:active {
+      background: #eee;
+    }
+    .title {
+      font-family: 'Rubik', 'Manrope', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: left;
+      margin: 3.5rem 0 2.2rem 0;
+      color: var(--main-black);
+      letter-spacing: -0.5px;
+      width: 100%;
+      line-height: 1.15;
+    }
+    .chart-box {
+      width: 100%;
+      background: #fafafa;
+      border-radius: var(--main-radius);
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.04);
+      padding: 1.2rem 1rem 1.5rem 1rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .caption {
+      font-size: 1.05rem;
+      color: #444;
+      text-align: center;
+      margin: 1.2rem 0 2.2rem 0;
+      font-family: 'Manrope', Arial, sans-serif;
+      font-weight: 500;
+    }
+    .continue-btn {
+      width: 100%;
+      max-width: 340px;
+      background: var(--main-black);
+      color: #fff;
+      border: none;
+      border-radius: var(--main-radius);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1.1rem 0;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+      display: block;
+    }
+    .continue-btn:active {
+      background: #333;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 0 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-btn" onclick="window.location.href='welcome.html'" aria-label="Back">&#8592;</button>
+    <div class="title">Cal AI creates<br>long-term results</div>
+    <div class="chart-box">
+      <div style="font-size:1.05rem;font-weight:600;margin-bottom:0.5rem;">Your weight</div>
+      <svg width="100%" height="120" viewBox="0 0 320 120" style="max-width:320px;">
+        <!-- X and Y axis -->
+        <line x1="30" y1="100" x2="290" y2="100" stroke="#bbb" stroke-width="2" />
+        <line x1="30" y1="20" x2="30" y2="100" stroke="#bbb" stroke-width="2" />
+        <!-- Cal AI line -->
+        <path id="calai-line" d="M30,90 Q80,60 130,50 Q180,45 230,100 Q260,110 290,100" fill="none" stroke="#FFD600" stroke-width="3.5" />
+        <!-- Traditional Diet line -->
+        <path id="diet-line" d="M30,90 Q80,30 130,20 Q180,15 230,60 Q260,110 290,80" fill="none" stroke="#e74c3c" stroke-width="3.5" stroke-dasharray="4 4" />
+        <!-- Labels -->
+        <text x="30" y="115" font-size="13" fill="#888">Month 1</text>
+        <text x="290" y="115" font-size="13" fill="#888">Month 6</text>
+        <text x="240" y="35" font-size="13" fill="#e74c3c">Traditional diet</text>
+        <text x="60" y="70" font-size="13" fill="#FFD600">Cal AI</text>
+      </svg>
+    </div>
+    <div class="caption">80% of Cal AI users maintain their weight loss even 6 months later</div>
+    <button class="continue-btn" onclick="window.location.href='height-weight.html'">Continue</button>
+  </div>
+  <script>
+window.addEventListener('DOMContentLoaded', () => {
+  function animatePath(id, duration) {
+    const path = document.getElementById(id);
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = length;
+    path.style.strokeDashoffset = length;
+    path.style.transition = `stroke-dashoffset ${duration}ms ease`;
+    setTimeout(() => {
+      path.style.strokeDashoffset = 0;
+    }, 100);
+  }
+  animatePath('calai-line', 1200);
+  animatePath('diet-line', 1400);
+});
+</script>
+</body>
+</html> 

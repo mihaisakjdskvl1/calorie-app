@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Height & Weight - Calorie App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --main-yellow: #FFD600;
+      --main-black: #111;
+      --main-radius: 1rem;
+      --main-font: 'Manrope', 'Rubik', Arial, sans-serif;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: var(--main-black);
+      font-family: var(--main-font);
+      width: 100vw;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    body {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+    }
+    .container {
+      width: 100vw;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      flex: 1 1 0;
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      background: none;
+      border: none;
+      font-size: 1.7rem;
+      color: var(--main-black);
+      cursor: pointer;
+      z-index: 2;
+      padding: 0.2rem 0.7rem 0.2rem 0.2rem;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .back-btn:active {
+      background: #eee;
+    }
+    .title {
+      font-family: 'Rubik', 'Manrope', Arial, sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: left;
+      margin: 3.5rem 0 0.7rem 0;
+      color: var(--main-black);
+      letter-spacing: -0.5px;
+      width: 100%;
+      line-height: 1.15;
+    }
+    .subtitle {
+      font-size: 1.08rem;
+      color: #444;
+      text-align: left;
+      margin-bottom: 2.2rem;
+      font-family: 'Manrope', Arial, sans-serif;
+      font-weight: 500;
+      width: 100%;
+    }
+    .inputs-row {
+      display: flex;
+      flex-direction: row;
+      gap: 1.2rem;
+      width: 100%;
+      margin-bottom: 2.2rem;
+      justify-content: center;
+    }
+    .input-group {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    label {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--main-black);
+      font-family: 'Manrope', Arial, sans-serif;
+    }
+    select {
+      width: 100%;
+      font-size: 1.15rem;
+      padding: 1.1rem 1rem;
+      border-radius: var(--main-radius);
+      border: 1.5px solid #eee;
+      background: #fafafa;
+      color: var(--main-black);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+      cursor: pointer;
+      transition: border 0.18s;
+    }
+    select:focus {
+      border: 1.5px solid var(--main-yellow);
+      outline: none;
+    }
+    .continue-btn {
+      width: 100%;
+      max-width: 340px;
+      background: var(--main-yellow);
+      color: var(--main-black);
+      border: none;
+      border-radius: var(--main-radius);
+      font-family: 'Manrope', Arial, sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 1.1rem 0;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+      display: block;
+    }
+    .continue-btn:active {
+      background: #ffe066;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 0 0.5rem;
+      }
+      .inputs-row {
+        flex-direction: column;
+        gap: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-btn" onclick="window.location.href='value-prop.html'" aria-label="Back">&#8592;</button>
+    <div class="title">Height & weight</div>
+    <div class="subtitle">This will be used to calibrate your custom plan.</div>
+    <form id="hwForm" autocomplete="off" style="width:100%;">
+      <div class="inputs-row">
+        <div class="input-group">
+          <label for="height">Height</label>
+          <select id="height" required>
+            <option value="" disabled selected>Select height</option>
+            <!-- Height options 140-220 cm -->
+            <script>for(let i=140;i<=220;i++)document.write(`<option value="${i}">${i} cm</option>`);</script>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="weight">Weight</label>
+          <select id="weight" required>
+            <option value="" disabled selected>Select weight</option>
+            <!-- Weight options 35-200 kg -->
+            <script>for(let i=35;i<=200;i++)document.write(`<option value="${i}">${i} kg</option>`);</script>
+          </select>
+        </div>
+      </div>
+      <button class="continue-btn" type="submit">Continue</button>
+    </form>
+  </div>
+  <script>
+    document.getElementById('hwForm').onsubmit = function(e) {
+      e.preventDefault();
+      const height = document.getElementById('height').value;
+      const weight = document.getElementById('weight').value;
+      localStorage.setItem('user_height', height);
+      localStorage.setItem('user_weight', weight);
+      window.location.href = 'goal-selection.html';
+    };
+  </script>
+</body>
+</html> 

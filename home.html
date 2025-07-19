@@ -954,7 +954,7 @@
         logoutBtn.onclick = function() {
           firebase.auth().signOut().finally(function() {
             localStorage.clear();
-            window.location.href = 'welcome.html';
+            window.location.href = 'index.html';
           });
         };
       }

@@ -920,7 +920,7 @@
       }
       
       // Funcție pentru salvarea completă a progresului
-      function saveUserProgress() {
+      window.saveUserProgress = function() {
         var userId = getUserId();
         if(userId) {
           // Salvează logurile pentru ultimele 7 zile
@@ -944,14 +944,18 @@
             subscribed: localStorage.getItem('subscribed'),
             admin_access: localStorage.getItem('admin_access'), // Salvează statusul de admin
             streak: localStorage.getItem('streak'),
-            last_log_date: localStorage.getItem('last_log_date')
+            last_log_date: localStorage.getItem('last_log_date'),
+            calories_goal: localStorage.getItem('calories_goal'),
+            protein_goal: localStorage.getItem('protein_goal'),
+            carbs_goal: localStorage.getItem('carbs_goal'),
+            fat_goal: localStorage.getItem('fat_goal')
           };
           localStorage.setItem('settings_' + userId, JSON.stringify(settings));
         }
       }
       
       // Funcție pentru restaurarea completă a progresului
-      function restoreUserProgress() {
+      window.restoreUserProgress = function() {
         var userId = getUserId();
         if(userId) {
           // Restaurează logurile
@@ -1002,7 +1006,8 @@
       localStorage.setItem = function(key, value) {
         originalSetItem.call(this, key, value);
         // Dacă se modifică ceva important, salvează progresul
-        if(key.includes('log_') || key === 'custom_macros' || key === 'streak') {
+        if(key.includes('log_') || key === 'custom_macros' || key === 'streak' || 
+           key.includes('_goal') || key === 'trial_start' || key === 'subscribed' || key === 'admin_access') {
           setTimeout(saveUserProgress, 100);
         }
       };
@@ -1088,6 +1093,11 @@
               if(window.loadGoals) {
                 window.loadGoals();
               }
+              // Forțează reîncărcarea goalurilor pentru a se asigura că folosesc valorile salvate
+              setTimeout(function() {
+                if(window.loadGoals) window.loadGoals();
+                if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+              }, 200);
             }, 100);
             alert('Acces deblocat cu succes! Ești acum admin permanent. Progresul tău a fost păstrat.');
           } else {

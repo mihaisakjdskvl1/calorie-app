@@ -409,6 +409,11 @@
       localStorage.setItem('protein_goal', protein_g);
       localStorage.setItem('carbs_goal', carbs_g);
       localStorage.setItem('fat_goal', fat_g);
+      
+      // Salvează și progresul per user dacă există funcția
+      if(window.saveUserProgress) {
+        setTimeout(window.saveUserProgress, 100);
+      }
     }
     calculatePlan();
 
@@ -440,6 +445,11 @@
         let custom = JSON.parse(localStorage.getItem('custom_macros')||'{}');
         custom[type] = parseInt(newVal);
         localStorage.setItem('custom_macros', JSON.stringify(custom));
+        
+        // Salvează și progresul per user dacă există funcția
+        if(window.saveUserProgress) {
+          setTimeout(window.saveUserProgress, 100);
+        }
         // Update UI
         input.replaceWith(valElem);
         valElem.textContent = newVal;

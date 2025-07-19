@@ -999,6 +999,11 @@
       var userId = getUserId();
       if(userId) {
         restoreUserProgress();
+        // Reîncarcă și dashboard-ul după restaurare
+        setTimeout(function() {
+          if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+          if(window.loadGoals) window.loadGoals();
+        }, 200);
       }
       
       // La fiecare modificare de localStorage, salvează progresul
@@ -1048,6 +1053,10 @@
           if(!localStorage.getItem('trial_start')) {
             localStorage.setItem('trial_start', Date.now());
           }
+          // Salvează progresul înainte de a verifica trialul
+          setTimeout(function() {
+            if(window.saveUserProgress) window.saveUserProgress();
+          }, 100);
         }
       });
       // La fiecare încărcare, verifică dacă trialul a expirat și nu există abonament
@@ -1064,9 +1073,21 @@
         } else {
           if(paywall) paywall.style.display = 'none';
           document.body.style.overflow = '';
+          // Restaurează progresul dacă trialul este activ sau userul este abonat/admin
+          setTimeout(function() {
+            if(window.restoreUserProgress) {
+              window.restoreUserProgress();
+              if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+              if(window.loadGoals) window.loadGoals();
+            }
+          }, 100);
         }
       }
-      checkTrialAndPaywall();
+      // Salvează progresul înainte de a verifica trialul
+      setTimeout(function() {
+        if(window.saveUserProgress) window.saveUserProgress();
+        checkTrialAndPaywall();
+      }, 100);
       // Buton acces cu parolă admin
       var paywall = document.getElementById('paywallModal');
       if(paywall) {
@@ -1124,6 +1145,14 @@
         var paywall = document.getElementById('paywallModal');
         if(paywall) paywall.style.display = 'none';
         document.body.style.overflow = '';
+        // Restaurează progresul după abonare
+        setTimeout(function() {
+          if(window.restoreUserProgress) {
+            window.restoreUserProgress();
+            if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+            if(window.loadGoals) window.loadGoals();
+          }
+        }, 100);
         // Poți afișa un mesaj de succes dacă vrei
         setTimeout(function(){ window.history.replaceState({}, document.title, window.location.pathname); }, 1000);
       }

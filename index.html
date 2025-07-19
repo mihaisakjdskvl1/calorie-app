@@ -100,6 +100,12 @@
   </style>
 </head>
 <body>
+  <script>
+    // Dacă userul e logat și are configurare completă, mergi direct la home
+    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+      window.location.href = 'home.html';
+    }
+  </script>
   <div class="container">
     <img class="welcome-img" src="https://images.unsplash.com/photo-1592415486689-125cbbfcbee2?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Sandwich welcome image">
     <div class="headline">Calorie tracking made easy</div>

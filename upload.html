@@ -66,13 +66,22 @@
               body: formData
             })
             .then(async res => {
-              if(res.ok) return res.json();
+              if(res.ok) {
+                try {
+                  return await res.json();
+                } catch(e) {
+                  const text = await res.text();
+                  document.getElementById('error').innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Răspunsul serverului nu este JSON:<br><pre style='white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;'>${text}</pre></div>`;
+                  showError('Răspunsul serverului nu este JSON:<br><pre>' + text + '</pre>');
+                  throw new Error('Răspunsul serverului nu este JSON: ' + text);
+                }
+              }
               let errText = '';
               try {
                 errText = await res.text();
               } catch(e) { errText = 'Nu s-a putut citi răspunsul serverului.'; }
-              debugDiv.innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Status: <b>${res.status}</b><br>Răspuns server:<br><pre style="white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;">${errText}</pre></div>`;
-              showError('❌ Eroare la procesare imagine. Status: ' + res.status + '<br>Răspuns server: <pre style="white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;">' + errText + '</pre>');
+              debugDiv.innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Status: <b>${res.status}</b><br>Răspuns server:<br><pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">${errText}</pre></div>`;
+              showError('❌ Eroare la procesare imagine. Status: ' + res.status + '<br>Răspuns server: <pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">' + errText + '</pre>');
               throw new Error('Eroare server: ' + res.status + ' ' + errText);
             })
             .then(data => {

@@ -66,23 +66,21 @@
               body: formData
             })
             .then(async res => {
+              const rawText = await res.text(); // citește body-ul o singură dată
               if(res.ok) {
                 try {
-                  return await res.json();
+                  const data = JSON.parse(rawText);
+                  return data;
                 } catch(e) {
-                  const text = await res.text();
-                  document.getElementById('error').innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Răspunsul serverului nu este JSON:<br><pre style='white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;'>${text}</pre></div>`;
-                  showError('Răspunsul serverului nu este JSON:<br><pre>' + text + '</pre>');
-                  throw new Error('Răspunsul serverului nu este JSON: ' + text);
+                  document.getElementById('error').innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Răspunsul serverului nu este JSON:<br><pre style='white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;'>${rawText}</pre></div>`;
+                  showError('Răspunsul serverului nu este JSON:<br><pre>' + rawText + '</pre>');
+                  throw new Error('Răspunsul serverului nu este JSON: ' + rawText);
                 }
               }
-              let errText = '';
-              try {
-                errText = await res.text();
-              } catch(e) { errText = 'Nu s-a putut citi răspunsul serverului.'; }
-              debugDiv.innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Status: <b>${res.status}</b><br>Răspuns server:<br><pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">${errText}</pre></div>`;
-              showError('❌ Eroare la procesare imagine. Status: ' + res.status + '<br>Răspuns server: <pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">' + errText + '</pre>');
-              throw new Error('Eroare server: ' + res.status + ' ' + errText);
+              // Dacă nu e ok, afișează status și body
+              document.getElementById('error').innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Status: <b>${res.status}</b><br>Răspuns server:<br><pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">${rawText}</pre></div>`;
+              showError('❌ Eroare la procesare imagine. Status: ' + res.status + '<br>Răspuns server: <pre style=\"white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;\">' + rawText + '</pre>');
+              throw new Error('Eroare server: ' + res.status + ' ' + rawText);
             })
             .then(data => {
               localStorage.removeItem('pending_upload_image');

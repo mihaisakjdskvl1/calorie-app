@@ -917,6 +917,11 @@
     async function takePhotoAndSend() {
       const video = document.getElementById('camVideo');
       const canvas = document.getElementById('camCanvas');
+      console.log('Video dimensions:', video.videoWidth, video.videoHeight);
+      if (!video.videoWidth || !video.videoHeight) {
+        alert('Camera nu a pornit corect. Încearcă din nou!');
+        return;
+      }
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
@@ -925,8 +930,14 @@
         // Save image as base64 in localStorage and redirect to upload.html
         const reader = new FileReader();
         reader.onloadend = function() {
-          localStorage.setItem('pending_upload_image', reader.result);
-          window.location.href = 'upload.html';
+          console.log('Base64 image length:', reader.result.length);
+          try {
+            localStorage.setItem('pending_upload_image', reader.result);
+            window.location.href = 'upload.html';
+          } catch(e) {
+            alert('Imaginea este prea mare pentru a fi salvată. Încearcă să faci o poză mai mică!');
+            console.error(e);
+          }
         };
         reader.readAsDataURL(blob);
       }, 'image/jpeg');

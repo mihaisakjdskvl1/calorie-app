@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://js.stripe.com/v3/"></script>
   <script>
     const firebaseConfig = {
@@ -1009,6 +1010,16 @@
             fat_goal: localStorage.getItem('fat_goal')
           };
           localStorage.setItem('settings_' + userId, JSON.stringify(settings));
+
+          if(window.firebase && firebase.auth().currentUser) {
+            const db = firebase.firestore();
+            db.collection('users').doc(firebase.auth().currentUser.uid).set({
+              progress: allLogs,
+              macros: macros || {},
+              settings: settings || {},
+              updatedAt: new Date().toISOString()
+            }, {merge:true});
+          }
         }
       }
       
@@ -1042,6 +1053,36 @@
                 if(settings[k]) localStorage.setItem(k, settings[k]);
               }
             } catch(e){}
+          }
+
+          if(window.firebase && firebase.auth().currentUser) {
+            const db = firebase.firestore();
+            db.collection('users').doc(firebase.auth().currentUser.uid).get().then(doc => {
+              if(doc.exists) {
+                const data = doc.data();
+                if(data.progress) {
+                  try {
+                    var logs = data.progress;
+                    for(var k in logs) {
+                      if(logs[k]) localStorage.setItem(k, logs[k]);
+                    }
+                  } catch(e){}
+                }
+                if(data.macros) {
+                  localStorage.setItem('custom_macros', JSON.stringify(data.macros));
+                }
+                if(data.settings) {
+                  try {
+                    var settings = data.settings;
+                    for(var k in settings) {
+                      if(settings[k]) localStorage.setItem(k, settings[k]);
+                    }
+                  } catch(e){}
+                }
+                if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+                if(window.loadGoals) window.loadGoals();
+              }
+            });
           }
         }
       }

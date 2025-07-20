@@ -882,7 +882,19 @@
     // Camera FAB (live camera, take photo, send to webhook)
     let cameraStream = null;
     function openCamera() {
-      // Modal
+      // Verifică trial, abonament sau admin
+      const trialStart = parseInt(localStorage.getItem('trial_start') || '0');
+      const isSubscribed = localStorage.getItem('subscribed') === '1';
+      const isAdmin = localStorage.getItem('admin_access') === '1';
+      const now = Date.now();
+      const trialActive = trialStart && (now - trialStart < 2 * 24 * 60 * 60 * 1000);
+      var paywall = document.getElementById('paywallModal');
+      if (!trialActive && !isSubscribed && !isAdmin) {
+        if(paywall) paywall.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+      // Modal cameră
       const modal = document.createElement('div');
       modal.className = 'camera-modal';
       modal.innerHTML = `<video id='camVideo' autoplay playsinline></video><br><button onclick='takePhotoAndSend()'>Take Photo</button><button class='close-btn' onclick='closeCamera()'>Close</button><canvas id='camCanvas' style='display:none;'></canvas>`;
@@ -1129,11 +1141,8 @@
           }, 100);
         }
       }
-      // Salvează progresul înainte de a verifica trialul
-      setTimeout(function() {
-        if(window.saveUserProgress) window.saveUserProgress();
-        checkTrialAndPaywall();
-      }, 100);
+      // Elimină apelul checkTrialAndPaywall(); de la încărcare (șterge sau comentează linia)
+      // checkTrialAndPaywall();
       // Buton acces cu parolă admin
       var paywall = document.getElementById('paywallModal');
       if(paywall) {

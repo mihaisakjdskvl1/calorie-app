@@ -109,6 +109,13 @@
     </button>
     <div id="debugMsg" style="margin-top:1.5rem;color:#d00;font-size:1.1rem;text-align:center;"></div>
   </div>
+  <div id="betaOverlay" style="position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:'Manrope',Arial,sans-serif;font-size:1.3rem;text-align:center;">
+    <div style="font-size:2.1rem;font-weight:800;margin-bottom:1.2rem;letter-spacing:-1px;">BETA TESTARE</div>
+    <div style="font-size:1.2rem;margin-bottom:2.2rem;max-width:400px;">Acum aplicația nu funcționează.<br>Revino după perioada de testare!</div>
+    <div style="font-size:1.1rem;margin-bottom:1.5rem;">Aplicația va fi disponibilă în:</div>
+    <div id="betaTimer" style="font-size:2.2rem;font-weight:700;background:#222;padding:1.1rem 2.2rem;border-radius:1.2rem;margin-bottom:2.2rem;letter-spacing:2px;"></div>
+    <div style="font-size:1rem;color:#FFD600;">Mulțumim pentru răbdare!<br>– Echipa Calorie App</div>
+  </div>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script>
@@ -149,6 +156,43 @@
         });
       }
     }
+    // Overlay BETA TESTARE cu timer 5 zile
+    (function(){
+      var overlay = document.getElementById('betaOverlay');
+      var timerDiv = document.getElementById('betaTimer');
+      var now = Date.now();
+      var start = localStorage.getItem('beta_start');
+      if(!start) {
+        start = now;
+        localStorage.setItem('beta_start', start);
+      } else {
+        start = parseInt(start);
+      }
+      var msLeft = 5*24*60*60*1000 - (now - start);
+      function updateTimer() {
+        var now2 = Date.now();
+        var msLeft2 = 5*24*60*60*1000 - (now2 - start);
+        if(msLeft2 <= 0) {
+          overlay.style.display = 'none';
+          return;
+        }
+        var days = Math.floor(msLeft2/(24*60*60*1000));
+        var hours = Math.floor((msLeft2%(24*60*60*1000))/(60*60*1000));
+        var mins = Math.floor((msLeft2%(60*60*1000))/(60*1000));
+        var secs = Math.floor((msLeft2%(60*1000))/1000);
+        timerDiv.textContent = `${days} zile ${hours}h ${mins}m ${secs}s`;
+        setTimeout(updateTimer, 1000);
+      }
+      if(msLeft > 0) {
+        overlay.style.display = 'flex';
+        updateTimer();
+        // Blochează scroll/interacțiuni
+        document.body.style.overflow = 'hidden';
+      } else {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    })();
   </script>
 </body>
 </html> 

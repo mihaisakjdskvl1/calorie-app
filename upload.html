@@ -47,11 +47,34 @@
             const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
             const formData = new FormData();
             formData.append('data', file);
+            // DEBUG: Afișează info fișier
+            const debugDiv = document.getElementById('error');
+            debugDiv.style.display = 'flex';
+            debugDiv.innerHTML = `<div style='color:#fff;background:#222;padding:1rem 1.5rem;border-radius:1rem;margin-bottom:1rem;'>Trimitem poza...<br>Dimensiune fișier: <b>${file.size}</b> bytes<br>Tip: <b>${file.type}</b></div>`;
+            console.log('File size:', file.size, 'bytes');
+            console.log('File type:', file.type);
+            // DEBUG: Afișează primele caractere din base64
+            const reader = new FileReader();
+            reader.onloadend = function() {
+              const base64 = reader.result;
+              console.log('Primele 100 caractere base64:', base64.slice(0,100));
+              debugDiv.innerHTML += `<div style='color:#fff;background:#333;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Primele 100 caractere base64:<br><code style='font-size:0.9rem;'>${base64.slice(0,100)}</code></div>`;
+            };
+            reader.readAsDataURL(file);
             fetch('https://imosnoi.app.n8n.cloud/webhook/f4d8209c-e9e6-4f61-8581-75da4a8fbee0', {
               method: 'POST',
               body: formData
             })
-            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(async res => {
+              if(res.ok) return res.json();
+              let errText = '';
+              try {
+                errText = await res.text();
+              } catch(e) { errText = 'Nu s-a putut citi răspunsul serverului.'; }
+              debugDiv.innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Status: <b>${res.status}</b><br>Răspuns server:<br><pre style="white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;">${errText}</pre></div>`;
+              showError('❌ Eroare la procesare imagine. Status: ' + res.status + '<br>Răspuns server: <pre style="white-space:pre-wrap;text-align:left;max-width:90vw;overflow-x:auto;">' + errText + '</pre>');
+              throw new Error('Eroare server: ' + res.status + ' ' + errText);
+            })
             .then(data => {
               localStorage.removeItem('pending_upload_image');
               const output = data.output || (data.response && data.response.output) || data;
@@ -62,7 +85,8 @@
               window.location.href = 'result.html';
             })
             .catch(err => {
-              showError('❌ Eroare la procesare imagine. Încearcă din nou.');
+              debugDiv.innerHTML += `<div style='color:#fff;background:#a00;padding:0.7rem 1.2rem;border-radius:0.7rem;margin-bottom:1rem;'>Eroare JS: <pre>${err.message || err}</pre></div>`;
+              showError('❌ Eroare la procesare imagine. Încearcă din nou.<br><br><b>Detalii:</b><br>' + (err.message || err));
               console.error(err);
             });
           });

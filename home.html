@@ -94,6 +94,16 @@
       font-size: 1.2rem;
       color: var(--main-black);
     }
+    .logo-plus-badge {
+      font-size: 0.8rem;
+      font-weight: 900;
+      padding: 0.05rem 0.4rem 0.12rem 0.4rem;
+      border-radius: 999px;
+      background: #0d6efd;
+      color: #fff;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
     .streak {
       display: flex;
       align-items: center;
@@ -425,6 +435,60 @@
       cursor: pointer;
       box-shadow: 0 2px 8px 0 rgba(0,0,0,0.07);
     }
+    .scan-choice-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 250;
+      padding: 1.2rem;
+      box-sizing: border-box;
+    }
+    .scan-choice-sheet {
+      width: 100%;
+      max-width: 430px;
+      background: #fff;
+      border-radius: 1.4rem;
+      padding: 1rem;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+      transform: translateY(0);
+      animation: sheetIn 0.18s ease-out;
+    }
+    @keyframes sheetIn {
+      from { transform: translateY(16px); opacity: 0.7; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .scan-choice-title {
+      font-weight: 900;
+      font-size: 1.05rem;
+      margin: 0.1rem 0 0.9rem 0;
+      color: #111;
+      text-align: left;
+    }
+    .scan-choice-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .scan-choice-btn {
+      width: 100%;
+      border: none;
+      border-radius: 1rem;
+      padding: 1rem 1rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .scan-choice-btn.primary { background: #111; color: #fff; }
+    .scan-choice-btn.secondary { background: #fff; color: #111; border: 2px solid #eee; box-shadow: none; }
+    .scan-choice-btn.cancel { background: #f6f6f6; color: #111; box-shadow: none; }
     /* Modal for log details */
     .log-modal {
       position: fixed;
@@ -555,7 +619,10 @@
   </script>
   <div class="container">
     <div class="top-bar">
-      <div class="logo"><i class="fas fa-apple-alt"></i> Cal Al</div>
+      <div class="logo">
+        <i class="fas fa-apple-alt"></i> Cal Al
+        <span id="plusBadge" class="logo-plus-badge" style="display:none;">PLUS</span>
+      </div>
       <div class="streak"><i class="fas fa-fire"></i> <span id="streakCount">1</span></div>
       <button id="supportBtn" class="support-btn" onclick="openSupportModal()"><i class="fas fa-headset"></i> Support</button>
       <button id="loginBtn" style="background:#fff;border:2px solid #eee;outline:none;cursor:pointer;padding:0.3rem 1.1rem 0.3rem 1.1rem;font-size:1.1rem;color:#111;margin-left:0.7rem;border-radius:1.2rem;font-weight:700;display:none;gap:0.5rem;align-items:center;"><i class="fas fa-user"></i> Login</button>
@@ -570,15 +637,6 @@
         <button id="googleSignIn" style="width:100%;background:#fff;color:#222;border:2px solid #eee;border-radius:2rem;padding:1rem 0;font-size:1.1rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:0.7rem;margin-bottom:1.1rem;cursor:pointer;"><i class="fab fa-google"></i> Sign in with Google</button>
         <div id="loginMsg" style="font-size:1rem;color:#d00;text-align:center;margin-top:0.7rem;"></div>
         <div style="font-size:0.95rem;color:#888;text-align:center;margin-top:1.2rem;">By continuing you agree to Cal Al's <a href="#" style="color:#111;text-decoration:underline;">Terms and Conditions</a> and <a href="#" style="color:#111;text-decoration:underline;">Privacy Policy</a></div>
-      </div>
-    </div>
-    <!-- Modal Paywall pentru trial expirat -->
-    <div id="paywallModal" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;">
-      <div style="background:#fff;border-radius:1.5rem;max-width:370px;width:95vw;margin:auto;padding:2.2rem 1.5rem 1.5rem 1.5rem;box-shadow:0 4px 32px 0 rgba(0,0,0,0.13);position:relative;text-align:center;">
-        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.2rem;">Perioadă de probă expirată</h2>
-        <div style="font-size:1.1rem;margin-bottom:1.5rem;">Perioada ta gratuită de 2 zile s-a încheiat.<br>Abonează-te pentru a continua să folosești aplicația.</div>
-        <button style="background:#111;color:#fff;border:none;border-radius:1.2rem;padding:1rem 2.2rem;font-size:1.1rem;font-weight:700;cursor:not-allowed;opacity:0.6;">Abonează-te (Stripe în curând)</button>
-        <div style="font-size:0.98rem;color:#888;margin-top:1.2rem;">Accesul este restricționat până la activarea abonamentului.</div>
       </div>
     </div>
     <!-- Modal Login Obligatoriu -->
@@ -606,6 +664,10 @@
           Răspundem în maxim 24 de ore! 📱
         </div>
       </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.8rem;margin-bottom:0.4rem;">
+      <div style="font-weight:800;font-size:1.05rem;color:#111;" id="selectedDateLabel"></div>
+      <input id="datePicker" type="date" style="border:2px solid #eee;border-radius:1rem;padding:0.45rem 0.7rem;font-weight:700;background:#fff;cursor:pointer;">
     </div>
     <div class="calendar" id="calendar"></div>
     <div class="summary-card">
@@ -649,7 +711,8 @@
       <div class="recent-list" id="recentList"></div>
     </div>
   </div>
-  <button class="fab" onclick="openCamera()"><i class="fas fa-camera"></i></button>
+  <button class="fab" id="scanFab" onclick="handleScanClick()"><i class="fas fa-camera"></i></button>
+  <input id="imageInput" type="file" accept="image/*" style="display:none;">
   <script>
     // Calendar logic
     function renderCalendar() {
@@ -671,41 +734,11 @@
     renderCalendar();
     // Streak (placeholder)
     document.getElementById('streakCount').textContent = '1';
-    // Load macro goals from summary
+    // Kept for backward-compat: always render day-based dashboard (consumed/left) instead of raw goals.
     window.loadGoals = function() {
-      // Folosește aceleași valori ca pe summary.html
-      const custom = JSON.parse(localStorage.getItem('custom_macros')||'{}');
-      let calories = custom.calories;
-      let protein = custom.protein;
-      let carbs = custom.carbs;
-      let fat = custom.fat;
-      // Dacă nu există custom_macros, folosește valorile calculate la configurare
-      if (calories === undefined || protein === undefined || carbs === undefined || fat === undefined) {
-        calories = parseInt(localStorage.getItem('calories_goal')||'2000');
-        protein = parseInt(localStorage.getItem('protein_goal')||'100');
-        carbs = parseInt(localStorage.getItem('carbs_goal')||'200');
-        fat = parseInt(localStorage.getItem('fat_goal')||'50');
-      }
-      document.getElementById('calNum').textContent = calories;
-      document.getElementById('calLabel').textContent = 'Calories left';
-      document.getElementById('proteinLeft').textContent = protein+'g';
-      document.getElementById('carbsLeft').textContent = carbs+'g';
-      document.getElementById('fatLeft').textContent = fat+'g';
-      // Progress rings
-      function setRing(id, value, max, ringId) {
-        const circle = document.getElementById(ringId);
-        const r = 15;
-        const c = 2 * Math.PI * r;
-        const pct = Math.min(1, value / max);
-        circle.setAttribute('stroke-dasharray', c);
-        circle.setAttribute('stroke-dashoffset', c * (1 - pct));
-      }
-      setRing(0, calories, 4000, 'calRing');
-      setRing(0, protein, 250, 'proteinRing');
-      setRing(0, carbs, 400, 'carbsRing');
-      setRing(0, fat, 120, 'fatRing');
-    }
-    loadGoals();
+      ensureMacroConsistency();
+      updateMacrosAndLogs();
+    };
     // Recently logged (demo data)
     function loadRecent() {
       const demo = [
@@ -720,19 +753,28 @@
       document.getElementById('recentList').innerHTML = html;
     }
     // loadRecent(); // Eliminat pentru a nu suprascrie logurile reale
-    // Interactive horizontal calendar with drag/swipe and tap
-    // Setează selectedDayIdx la ziua curentă din săptămână (0=Luni, 6=Duminică)
-    const today = new Date();
-    let jsDay = today.getDay(); // 0=Sunday, 1=Monday, ...
-    // Convertim la 0=Luni, 6=Duminică
-    let selectedDayIdx = (jsDay === 0) ? 6 : jsDay - 1;
-    function getWeekDays() {
+    // Interactive calendar + history date picker
+    let selectedDateObj = new Date();
+    function formatForInput(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    function updateSelectedDateLabel() {
+      const opts = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+      document.getElementById('selectedDateLabel').textContent = selectedDateObj.toLocaleDateString(undefined, opts);
+      document.getElementById('datePicker').value = formatForInput(selectedDateObj);
+    }
+    updateSelectedDateLabel();
+
+    function getWeekDays(baseDate = selectedDateObj) {
       const days = ['L','M','M','J','V','S','D'];
       const week = [];
-      const today = new Date();
-      // Găsește luni din săptămâna curentă
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+      const ref = new Date(baseDate);
+      // Găsește luni din săptămâna pentru data de referință
+      const monday = new Date(ref);
+      monday.setDate(ref.getDate() - ((ref.getDay() + 6) % 7));
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
@@ -747,19 +789,21 @@
     function renderCalendarSlider() {
       const calendar = document.getElementById('calendar');
       calendar.innerHTML = '';
-      const week = getWeekDays();
+      const week = getWeekDays(selectedDateObj);
       const todayDate = new Date();
-      let todayIdx = todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1;
+      const todayIdx = todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1;
+      const selectedIdx = selectedDateObj.getDay() === 0 ? 6 : selectedDateObj.getDay() - 1;
       week.forEach((d, idx) => {
         const pill = document.createElement('div');
         let pillClass = 'calendar-pill';
-        if (idx === selectedDayIdx) pillClass += ' selected';
-        if (idx === todayIdx) pillClass += ' today-highlight';
+        if (idx === selectedIdx && d.date === selectedDateObj.toDateString()) pillClass += ' selected';
+        if (d.date === todayDate.toDateString()) pillClass += ' today-highlight';
         pill.className = pillClass;
         pill.textContent = d.label;
         pill.style.cursor = 'pointer';
         pill.onclick = () => {
-          selectedDayIdx = idx;
+          selectedDateObj = d.dateObj;
+          updateSelectedDateLabel();
           renderCalendarSlider();
           updateMacrosAndLogs();
         };
@@ -768,26 +812,48 @@
     }
     renderCalendarSlider();
     // Store logs per day in localStorage
-    function getDayKey(idx) {
-      const week = getWeekDays();
-      return 'log_' + week[idx].date;
+    function getDayKeyForDate(dateObj) {
+      return 'log_' + new Date(dateObj).toDateString();
     }
     // Macro goals
+    function readStoredNumber(key, fallback) {
+      const raw = localStorage.getItem(key);
+      const n = raw === null ? NaN : parseFloat(raw);
+      return Number.isFinite(n) ? n : fallback;
+    }
     function getMacroGoals() {
       const macros = JSON.parse(localStorage.getItem('custom_macros')||'{}');
       return {
-        calories: macros.calories || parseInt(localStorage.getItem('calories_goal')||'2000'),
-        protein: macros.protein || parseInt(localStorage.getItem('protein_goal')||'100'),
-        carbs: macros.carbs || parseInt(localStorage.getItem('carbs_goal')||'200'),
-        fat: macros.fat || parseInt(localStorage.getItem('fat_goal')||'50')
+        calories: Number.isFinite(parseFloat(macros.calories)) ? parseFloat(macros.calories) : readStoredNumber('calories_goal', 2000),
+        protein: Number.isFinite(parseFloat(macros.protein)) ? parseFloat(macros.protein) : readStoredNumber('protein_goal', 100),
+        carbs: Number.isFinite(parseFloat(macros.carbs)) ? parseFloat(macros.carbs) : readStoredNumber('carbs_goal', 200),
+        fat: Number.isFinite(parseFloat(macros.fat)) ? parseFloat(macros.fat) : readStoredNumber('fat_goal', 50)
       };
+    }
+    function ensureMacroConsistency() {
+      const custom = JSON.parse(localStorage.getItem('custom_macros') || '{}');
+      const caloriesGoal = parseInt(localStorage.getItem('calories_goal') || '0');
+      const proteinGoal = parseInt(localStorage.getItem('protein_goal') || '0');
+      const carbsGoal = parseInt(localStorage.getItem('carbs_goal') || '0');
+      const fatGoal = parseInt(localStorage.getItem('fat_goal') || '0');
+
+      // If onboarding goals exist but custom macros are missing/partial,
+      // seed custom_macros so dashboard values stay stable after login restore.
+      const merged = {
+        calories: Number.isFinite(custom.calories) ? custom.calories : caloriesGoal,
+        protein: Number.isFinite(custom.protein) ? custom.protein : proteinGoal,
+        carbs: Number.isFinite(custom.carbs) ? custom.carbs : carbsGoal,
+        fat: Number.isFinite(custom.fat) ? custom.fat : fatGoal
+      };
+      if (merged.calories > 0 && merged.protein >= 0 && merged.carbs >= 0 && merged.fat >= 0) {
+        localStorage.setItem('custom_macros', JSON.stringify(merged));
+      }
     }
     // Update macros and logs for selected day
     function updateMacrosAndLogs() {
       // Determină data pentru ziua selectată
-      const week = getWeekDays();
-      const selectedDate = week[selectedDayIdx].dateObj || new Date();
-      const dayKey = 'log_' + selectedDate.toDateString();
+      const selectedDate = selectedDateObj || new Date();
+      const dayKey = getDayKeyForDate(selectedDate);
       let logs = JSON.parse(localStorage.getItem(dayKey)||'[]');
       // Calculează suma valorilor logate pentru ziua selectată
       let sum = {calories:0, protein:0, carbs:0, fat:0};
@@ -814,12 +880,16 @@
         circle.setAttribute('stroke-dasharray', c);
         circle.setAttribute('stroke-dashoffset', c * (1 - pct));
       }
-      setRing(0, goals.calories-sum.calories, 4000, 'calRing');
-      setRing(0, goals.protein-sum.protein, 250, 'proteinRing');
-      setRing(0, goals.carbs-sum.carbs, 400, 'carbsRing');
-      setRing(0, goals.fat-sum.fat, 120, 'fatRing');
+      // Rings show remaining fraction of today's goal (resets per-day automatically)
+      setRing(0, goals.calories - sum.calories, Math.max(1, goals.calories), 'calRing');
+      setRing(0, goals.protein - sum.protein, Math.max(1, goals.protein), 'proteinRing');
+      setRing(0, goals.carbs - sum.carbs, Math.max(1, goals.carbs), 'carbsRing');
+      setRing(0, goals.fat - sum.fat, Math.max(1, goals.fat), 'fatRing');
       // Recently logged
       let html = '';
+      if (!logs.length) {
+        html = `<div style="color:#888;font-weight:600;padding:0.6rem 0.2rem;">No scans logged for this day yet.</div>`;
+      }
       logs.forEach((l,idx)=>{
         html += `<button class='recent-card' onclick='showLogDetail(${idx})'>
           ${l.image ? `<img src="${l.image}" style="width:38px;height:38px;object-fit:cover;border-radius:0.7rem;margin-bottom:0.4rem;">` : ''}
@@ -832,7 +902,7 @@
       calculateStreak();
     }
     window.showLogDetail = function(idx) {
-      const logs = JSON.parse(localStorage.getItem(getDayKey(selectedDayIdx))||'[]');
+      const logs = JSON.parse(localStorage.getItem(getDayKeyForDate(selectedDateObj))||'[]');
       const l = logs[idx];
       const modal = document.createElement('div');
       modal.className = 'log-modal';
@@ -883,18 +953,6 @@
     // Camera FAB (live camera, take photo, send to webhook)
     let cameraStream = null;
     function openCamera() {
-      // Verifică trial, abonament sau admin
-      const trialStart = parseInt(localStorage.getItem('trial_start') || '0');
-      const isSubscribed = localStorage.getItem('subscribed') === '1';
-      const isAdmin = localStorage.getItem('admin_access') === '1';
-      const now = Date.now();
-      const trialActive = trialStart && (now - trialStart < 2 * 24 * 60 * 60 * 1000);
-      var paywall = document.getElementById('paywallModal');
-      if (!trialActive && !isSubscribed && !isAdmin) {
-        if(paywall) paywall.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        return;
-      }
       // Modal cameră
       const modal = document.createElement('div');
       modal.className = 'camera-modal';
@@ -943,7 +1001,85 @@
       }, 'image/jpeg');
     }
     // Initial load
+    ensureMacroConsistency();
     updateMacrosAndLogs();
+
+    function closeScanChoice() {
+      const modal = document.querySelector('.scan-choice-modal');
+      if (modal) modal.remove();
+      document.body.style.overflow = '';
+    }
+    function hasPlus() {
+      return localStorage.getItem('subscribed') === '1';
+    }
+    window.handleScanClick = function() {
+      // Must be logged in (Google) AND subscribed to Plus to access camera
+      if (!localStorage.getItem('user_id')) {
+        var forceModal = document.getElementById('forceLoginModal');
+        if (forceModal) forceModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+      if (!hasPlus()) {
+        window.location.href = 'plus.html';
+        return;
+      }
+      window.openScanChoice();
+    };
+
+    window.openScanChoice = function() {
+      const modal = document.createElement('div');
+      modal.className = 'scan-choice-modal';
+      modal.innerHTML = `
+        <div class="scan-choice-sheet" role="dialog" aria-modal="true">
+          <div class="scan-choice-title">Scan food</div>
+          <div class="scan-choice-actions">
+            <button class="scan-choice-btn primary" id="scanTakePhotoBtn"><i class="fas fa-camera"></i> Take a photo</button>
+            <button class="scan-choice-btn secondary" id="scanGalleryBtn"><i class="fas fa-image"></i> Choose from gallery</button>
+            <button class="scan-choice-btn cancel" id="scanCancelBtn">Cancel</button>
+          </div>
+        </div>
+      `;
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeScanChoice();
+      });
+      document.body.appendChild(modal);
+      document.body.style.overflow = 'hidden';
+
+      document.getElementById('scanCancelBtn').onclick = closeScanChoice;
+      document.getElementById('scanTakePhotoBtn').onclick = function() {
+        closeScanChoice();
+        openCamera();
+      };
+      document.getElementById('scanGalleryBtn').onclick = function() {
+        closeScanChoice();
+        document.getElementById('imageInput').click();
+      };
+    };
+
+    document.getElementById('datePicker').addEventListener('change', function(e) {
+      if (!e.target.value) return;
+      selectedDateObj = new Date(e.target.value + 'T00:00:00');
+      updateSelectedDateLabel();
+      renderCalendarSlider();
+      updateMacrosAndLogs();
+    });
+
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        try {
+          localStorage.setItem('pending_upload_image', reader.result);
+          window.location.href = 'upload.html';
+        } catch (err) {
+          alert('Imaginea este prea mare pentru a fi salvată. Încearcă o poză mai mică!');
+        }
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', function() {
@@ -993,13 +1129,12 @@
       window.saveUserProgress = function() {
         var userId = getUserId();
         if(userId) {
-          // Salvează logurile pentru ultimele 7 zile
+          // Salvează toate logurile istorice (nu doar 7 zile)
           var allLogs = {};
-          for(var i=0;i<7;i++) {
-            var week = (window.getWeekDays && window.getWeekDays()) || [];
-            if(week[i]) {
-              var key = 'log_' + week[i].date;
-              allLogs[key] = localStorage.getItem(key);
+          for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('log_') === 0) {
+              allLogs[k] = localStorage.getItem(k);
             }
           }
           localStorage.setItem('progress_' + userId, JSON.stringify(allLogs));
@@ -1010,7 +1145,6 @@
           
           // Salvează și alte setări importante
           var settings = {
-            trial_start: localStorage.getItem('trial_start'),
             subscribed: localStorage.getItem('subscribed'),
             admin_access: localStorage.getItem('admin_access'), // Salvează statusul de admin
             streak: localStorage.getItem('streak'),
@@ -1024,9 +1158,11 @@
 
           if(window.firebase && firebase.auth().currentUser) {
             const db = firebase.firestore();
+            let macrosObj = {};
+            try { macrosObj = macros ? JSON.parse(macros) : {}; } catch(e) {}
             db.collection('users').doc(firebase.auth().currentUser.uid).set({
               progress: allLogs,
-              macros: macros || {},
+              macros: macrosObj || {},
               settings: settings || {},
               updatedAt: new Date().toISOString()
             }, {merge:true});
@@ -1044,7 +1180,7 @@
             try {
               var logs = JSON.parse(saved);
               for(var k in logs) {
-                if(logs[k]) localStorage.setItem(k, logs[k]);
+                if(logs[k] !== null && logs[k] !== undefined) localStorage.setItem(k, logs[k]);
               }
             } catch(e){}
           }
@@ -1061,7 +1197,7 @@
             try {
               var settings = JSON.parse(settingsSaved);
               for(var k in settings) {
-                if(settings[k]) localStorage.setItem(k, settings[k]);
+                if(settings[k] !== null && settings[k] !== undefined) localStorage.setItem(k, settings[k]);
               }
             } catch(e){}
           }
@@ -1075,7 +1211,7 @@
                   try {
                     var logs = data.progress;
                     for(var k in logs) {
-                      if(logs[k]) localStorage.setItem(k, logs[k]);
+                      if(logs[k] !== null && logs[k] !== undefined) localStorage.setItem(k, logs[k]);
                     }
                   } catch(e){}
                 }
@@ -1086,10 +1222,11 @@
                   try {
                     var settings = data.settings;
                     for(var k in settings) {
-                      if(settings[k]) localStorage.setItem(k, settings[k]);
+                      if(settings[k] !== null && settings[k] !== undefined) localStorage.setItem(k, settings[k]);
                     }
                   } catch(e){}
                 }
+                ensureMacroConsistency();
                 if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
                 if(window.loadGoals) window.loadGoals();
               }
@@ -1109,11 +1246,10 @@
       var userId = getUserId();
       if(userId) {
         restoreUserProgress();
+        ensureMacroConsistency();
         // Reîncarcă și dashboard-ul după restaurare
-        setTimeout(function() {
-          if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-          if(window.loadGoals) window.loadGoals();
-        }, 200);
+        if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+        if(window.loadGoals) window.loadGoals();
       }
       
       // La fiecare modificare de localStorage, salvează progresul
@@ -1122,8 +1258,8 @@
         originalSetItem.call(this, key, value);
         // Dacă se modifică ceva important, salvează progresul
         if(key.includes('log_') || key === 'custom_macros' || key === 'streak' || 
-           key.includes('_goal') || key === 'trial_start' || key === 'subscribed' || key === 'admin_access') {
-          setTimeout(saveUserProgress, 100);
+           key.includes('_goal') || key === 'subscribed' || key === 'admin_access') {
+          saveUserProgress();
         }
       };
       // Logout rapid
@@ -1131,8 +1267,12 @@
       if(logoutBtn) {
         logoutBtn.onclick = function() {
           firebase.auth().signOut().finally(function() {
-            localStorage.clear();
-            window.location.href = 'index.html';
+            localStorage.removeItem('logged_in');
+            localStorage.removeItem('user_id');
+            // Stay on home and show login UI/modal
+            var forceModal = document.getElementById('forceLoginModal');
+            if(forceModal) forceModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
           });
         };
       }
@@ -1140,6 +1280,7 @@
         var loginBtn = document.getElementById('loginBtn');
         var userAvatar = document.getElementById('userAvatar');
         var logoutBtn = document.getElementById('logoutBtn');
+        var plusBadge = document.getElementById('plusBadge');
         firebase.auth().onAuthStateChanged(function(user) {
           if(user) {
             if(loginBtn) loginBtn.style.display = 'none';
@@ -1149,120 +1290,16 @@
               userAvatar.title = user.displayName || user.email || '';
             }
             if(logoutBtn) logoutBtn.style.display = '';
+            if(plusBadge) plusBadge.style.display = hasPlus() ? 'inline-flex' : 'none';
           } else {
             if(loginBtn) loginBtn.style.display = '';
             if(userAvatar) userAvatar.style.display = 'none';
             if(logoutBtn) logoutBtn.style.display = 'none';
+            if(plusBadge) plusBadge.style.display = 'none';
           }
         });
       }
       updateAuthUI();
-      // Detectează utilizator nou și setează trial_start la primul login
-      firebase.auth().onAuthStateChanged(function(user) {
-        if(user) {
-          if(!localStorage.getItem('trial_start')) {
-            localStorage.setItem('trial_start', Date.now());
-          }
-          // Salvează progresul înainte de a verifica trialul
-          setTimeout(function() {
-            if(window.saveUserProgress) window.saveUserProgress();
-          }, 100);
-        }
-      });
-      // La fiecare încărcare, verifică dacă trialul a expirat și nu există abonament
-      function checkTrialAndPaywall() {
-        const trialStart = parseInt(localStorage.getItem('trial_start') || '0');
-        const isSubscribed = localStorage.getItem('subscribed') === '1';
-        const isAdmin = localStorage.getItem('admin_access') === '1'; // Verifică dacă e admin
-        const now = Date.now();
-        const trialActive = trialStart && (now - trialStart < 2 * 24 * 60 * 60 * 1000);
-        var paywall = document.getElementById('paywallModal');
-        if (!trialActive && !isSubscribed && !isAdmin) {
-          if(paywall) paywall.style.display = 'flex';
-          document.body.style.overflow = 'hidden';
-        } else {
-          if(paywall) paywall.style.display = 'none';
-          document.body.style.overflow = '';
-          // Restaurează progresul dacă trialul este activ sau userul este abonat/admin
-          setTimeout(function() {
-            if(window.restoreUserProgress) {
-              window.restoreUserProgress();
-              if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-              if(window.loadGoals) window.loadGoals();
-            }
-          }, 100);
-        }
-      }
-      // Elimină apelul checkTrialAndPaywall(); de la încărcare (șterge sau comentează linia)
-      // checkTrialAndPaywall();
-      // Buton acces cu parolă admin
-      var paywall = document.getElementById('paywallModal');
-      if(paywall) {
-        var adminBtn = document.createElement('button');
-        adminBtn.textContent = 'Acces cu parolă admin';
-        adminBtn.style = 'background:#eee;color:#111;border:2px solid #eee;border-radius:1.2rem;padding:1rem 2.2rem;font-size:1.1rem;font-weight:700;cursor:pointer;margin-top:1.2rem;display:block;width:100%';
-        adminBtn.onclick = function() {
-          var parola = prompt('Introdu parola de acces:');
-          if(parola === 'Xxx201027') {
-            // Salvează progresul înainte de a modifica subscribed
-            saveUserProgress();
-            localStorage.setItem('subscribed','1');
-            localStorage.setItem('admin_access','1'); // Setează permanent statusul de admin
-            paywall.style.display = 'none';
-            document.body.style.overflow = '';
-            // Restaurează imediat progresul după modificare
-            setTimeout(function() {
-              restoreUserProgress();
-              // Reîncarcă dashboard-ul cu valorile salvate
-              if(window.updateMacrosAndLogs) {
-                window.updateMacrosAndLogs();
-              }
-              // Reîncarcă și goalurile pentru a se asigura că folosesc custom_macros
-              if(window.loadGoals) {
-                window.loadGoals();
-              }
-              // Forțează reîncărcarea goalurilor pentru a se asigura că folosesc valorile salvate
-              setTimeout(function() {
-                if(window.loadGoals) window.loadGoals();
-                if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-              }, 200);
-            }, 100);
-            alert('Acces deblocat cu succes! Ești acum admin permanent. Progresul tău a fost păstrat.');
-          } else {
-            alert('Parolă greșită!');
-          }
-        };
-        paywall.querySelector('div').appendChild(adminBtn);
-      }
-      // Poți apela checkTrialAndPaywall() și după login/logout dacă vrei update live
-      // Stripe Checkout pentru abonare
-      var paywallBtn = document.querySelector('#paywallModal button');
-      if(paywallBtn) {
-        paywallBtn.disabled = false;
-        paywallBtn.style.opacity = '1';
-        paywallBtn.style.cursor = 'pointer';
-        paywallBtn.textContent = 'Abonează-te (2$/lună)';
-        paywallBtn.onclick = function() {
-          window.location.href = 'https://buy.stripe.com/test_aFa7sLfPja0oaII3Of5os00';
-        };
-      }
-      // Detectează dacă userul a revenit de pe Stripe cu succes
-      if(window.location.search.includes('subscribed=1')) {
-        localStorage.setItem('subscribed', '1');
-        var paywall = document.getElementById('paywallModal');
-        if(paywall) paywall.style.display = 'none';
-        document.body.style.overflow = '';
-        // Restaurează progresul după abonare
-        setTimeout(function() {
-          if(window.restoreUserProgress) {
-            window.restoreUserProgress();
-            if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-            if(window.loadGoals) window.loadGoals();
-          }
-        }, 100);
-        // Poți afișa un mesaj de succes dacă vrei
-        setTimeout(function(){ window.history.replaceState({}, document.title, window.location.pathname); }, 1000);
-      }
       // Blochează accesul dacă nu ești logat cu Google
       function checkForceLogin() {
         firebase.auth().onAuthStateChanged(function(user) {
@@ -1319,9 +1356,7 @@
         closeSupportModal();
         
         // Afișează un mesaj de confirmare
-        setTimeout(function() {
-          alert('Instagram a fost deschis! Trimite-ne un mesaj direct cu întrebarea ta. 📱');
-        }, 500);
+        alert('Instagram a fost deschis! Trimite-ne un mesaj direct cu întrebarea ta. 📱');
       };
     });
   </script>

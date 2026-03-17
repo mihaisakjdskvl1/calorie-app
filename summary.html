@@ -405,10 +405,19 @@
       // Debug log
       document.getElementById('debugLog').textContent = debug;
       // Salvează valorile calculate pentru home.html
-      localStorage.setItem('calories_goal', round(target_calories));
-      localStorage.setItem('protein_goal', protein_g);
-      localStorage.setItem('carbs_goal', carbs_g);
-      localStorage.setItem('fat_goal', fat_g);
+      const calcGoals = {
+        calories: round(target_calories),
+        protein: protein_g,
+        carbs: carbs_g,
+        fat: fat_g
+      };
+      localStorage.setItem('calories_goal', calcGoals.calories);
+      localStorage.setItem('protein_goal', calcGoals.protein);
+      localStorage.setItem('carbs_goal', calcGoals.carbs);
+      localStorage.setItem('fat_goal', calcGoals.fat);
+      // For a newly calculated plan, reset custom macros to match the calculation.
+      // Manual edits (via the pencil) will overwrite afterwards.
+      localStorage.setItem('custom_macros', JSON.stringify(calcGoals));
       
       // Salvează și progresul per user dacă există funcția
       if(window.saveUserProgress) {
@@ -468,15 +477,12 @@
     }
     // On load, override values with custom_macros if present
     window.addEventListener('DOMContentLoaded', () => {
-      const custom = JSON.parse(localStorage.getItem('custom_macros')||'{}');
-      if(custom.calories) document.getElementById('caloriesVal').textContent = custom.calories;
-      if(custom.carbs) document.getElementById('carbsVal').textContent = custom.carbs;
-      if(custom.protein) document.getElementById('proteinVal').textContent = custom.protein;
-      if(custom.fat) document.getElementById('fatVal').textContent = custom.fat;
+      // UI is already set by calculatePlan(); keep this hook for future use.
     });
     // Eliminat redirectul automat către home.html dacă ești deja logat. Doar butonul face redirectul.
     document.getElementById('getStartedBtn').onclick = function() {
-      localStorage.setItem('logged_in', '1');
+      // Nu marca utilizatorul ca "logat" fără Google.
+      // Login-ul real se face pe home.html (Firebase Google Auth), unde se face și restore/sync pe cont.
       window.location.href = 'home.html';
     };
   </script>

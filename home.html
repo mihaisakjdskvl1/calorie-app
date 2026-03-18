@@ -1265,6 +1265,8 @@
         // Reîncarcă și dashboard-ul după restaurare
         if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
         if(window.loadGoals) window.loadGoals();
+        // Ensure current local settings (like subscribed) are persisted online.
+        if (window.saveUserProgress) window.saveUserProgress();
       }
       
       // La fiecare modificare de localStorage, salvează progresul

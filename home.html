@@ -1140,8 +1140,15 @@
         return localStorage.getItem('user_id') || null;
       }
       
+      // IMPORTANT:
+      // La login, restoreUserProgress() încarcă asincron datele din Firestore.
+      // În timpul ăsta nu trebuie să salvăm înapoi în Firestore (altfel rescriem
+      // datele cu ce a fost în localStorage / onboarding).
+      var isRestoringProgress = false;
+      
       // Funcție pentru salvarea completă a progresului
       window.saveUserProgress = function() {
+        if (isRestoringProgress) return;
         var userId = getUserId();
         if(userId) {
           // Salvează toate logurile istorice (nu doar 7 zile)
@@ -1200,6 +1207,7 @@
       window.restoreUserProgress = function() {
         var userId = getUserId();
         if(userId) {
+          isRestoringProgress = true;
           // Reset Plus flag so it can't "leak" between Google accounts.
           localStorage.removeItem('subscribed');
           // Restaurează logurile
@@ -1268,7 +1276,17 @@
                 if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
                 if(window.loadGoals) window.loadGoals();
               }
+              isRestoringProgress = false;
             });
+            // If the request fails, don't block forever.
+            // (Also prevents accidental overwrites with onboarding defaults.)
+            db.collection('users').doc(firebase.auth().currentUser.uid).get().catch(function(){
+              isRestoringProgress = false;
+            });
+          }
+          // If Firestore isn't available for some reason, allow saving again.
+          else {
+            isRestoringProgress = false;
           }
         }
       }
@@ -1288,8 +1306,6 @@
         // Reîncarcă și dashboard-ul după restaurare
         if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
         if(window.loadGoals) window.loadGoals();
-        // Ensure current local settings (like subscribed) are persisted online.
-        if (window.saveUserProgress) window.saveUserProgress();
       }
       
       // La fiecare modificare de localStorage, salvează progresul

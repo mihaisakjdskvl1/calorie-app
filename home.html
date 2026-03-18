@@ -875,7 +875,16 @@
         const r = parseFloat(circle.getAttribute('r') || '15');
         const c = 2 * Math.PI * r;
         const pct = Math.max(0, Math.min(1, value / max));
-        // Use "dash-gap" so the colored part can truly disappear when pct=0
+
+        // When pct is ~0 we want the colored arc to fully disappear.
+        if (pct <= 0.00001) {
+          circle.setAttribute('stroke-dasharray', `0 ${c}`);
+          circle.setAttribute('stroke-dashoffset', '0');
+          circle.setAttribute('stroke-linecap', 'butt');
+          return;
+        }
+
+        // Use "dash-gap" so the colored part matches remaining fraction.
         circle.setAttribute('stroke-dasharray', `${c} ${c}`);
         circle.setAttribute('stroke-dashoffset', c * (1 - pct));
         circle.setAttribute('stroke-linecap', 'round');

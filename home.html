@@ -1084,7 +1084,10 @@
   <script>
     window.addEventListener('DOMContentLoaded', function() {
       var btn = document.getElementById('loginBtn');
+      var isSigningIn = false;
       function googleLoginHandler() {
+        if (isSigningIn) return; // prevents auth/cancelled-popup-request
+        isSigningIn = true;
         var provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider).then(function(res){
           var user = res.user;
@@ -1092,7 +1095,10 @@
           localStorage.setItem('user_id', user.uid);
           window.location.reload();
         }).catch(function(e){
-          alert(e.message);
+          var loginMsgEl = document.getElementById('loginMsg');
+          if (loginMsgEl) loginMsgEl.textContent = e.message || String(e);
+          else alert(e.message || String(e));
+          isSigningIn = false;
         });
       }
       if(btn) {
@@ -1109,17 +1115,7 @@
         if(loginMsg) loginMsg.textContent = '';
       }
       if(closeModalBtn) closeModalBtn.onclick = closeLoginModal;
-      if(googleBtn) googleBtn.onclick = function() {
-        var provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).then(function(res){
-          var user = res.user;
-          localStorage.setItem('logged_in','1');
-          localStorage.setItem('user_id', user.uid);
-          window.location.reload();
-        }).catch(function(e){
-          if(loginMsg) loginMsg.textContent = e.message;
-        });
-      };
+      if(googleBtn) googleBtn.onclick = googleLoginHandler;
       // --- Salvare și restaurare progres per user Google ---
       function getUserId() {
         return localStorage.getItem('user_id') || null;

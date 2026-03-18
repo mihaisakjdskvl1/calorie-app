@@ -1189,6 +1189,8 @@
       window.restoreUserProgress = function() {
         var userId = getUserId();
         if(userId) {
+          // Reset Plus flag so it can't "leak" between Google accounts.
+          localStorage.removeItem('subscribed');
           // Restaurează logurile
           var saved = localStorage.getItem('progress_' + userId);
           if(saved) {
@@ -1286,6 +1288,7 @@
           firebase.auth().signOut().finally(function() {
             localStorage.removeItem('logged_in');
             localStorage.removeItem('user_id');
+            localStorage.removeItem('subscribed');
             // Stay on home and show login UI/modal
             var forceModal = document.getElementById('forceLoginModal');
             if(forceModal) forceModal.style.display = 'flex';

@@ -1000,6 +1000,9 @@
           console.log('Base64 image length:', reader.result.length);
           try {
             localStorage.setItem('pending_upload_image', reader.result);
+            // Remember which day the user selected on dashboard,
+            // so we can log analysis results to the same day.
+            localStorage.setItem('upload_log_date', selectedDateObj.toDateString());
             window.location.href = 'upload.html';
           } catch(e) {
             alert('Imaginea este prea mare pentru a fi salvată. Încearcă să faci o poză mai mică!');
@@ -1081,6 +1084,8 @@
       reader.onloadend = function() {
         try {
           localStorage.setItem('pending_upload_image', reader.result);
+          // Remember which day the user selected on dashboard.
+          localStorage.setItem('upload_log_date', selectedDateObj.toDateString());
           window.location.href = 'upload.html';
         } catch (err) {
           alert('Imaginea este prea mare pentru a fi salvată. Încearcă o poză mai mică!');

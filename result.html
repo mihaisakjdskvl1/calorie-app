@@ -162,8 +162,10 @@
       <div id="result"></div>
     </div>
     <script>
-      let outputRaw = localStorage.getItem('last_ai_output');
-      let imgData = localStorage.getItem('last_ai_image');
+      // Prefer pending data (set in upload.html), fallback to legacy keys.
+      let outputRaw = localStorage.getItem('pending_ai_output') || localStorage.getItem('last_ai_output');
+      let imgData = localStorage.getItem('pending_ai_image') || localStorage.getItem('last_ai_image');
+      let pendingLogDate = localStorage.getItem('pending_ai_log_date') || null;
       if (!outputRaw || !imgData) {
         document.getElementById('result').innerHTML = `
           <div style="color:red;margin:2rem auto;text-align:center;max-width:400px;">Nu există date de afișat. Te rugăm să reîncarci o imagine sau să reiei procesul de analiză.</div>
@@ -178,51 +180,233 @@
         if (output && output.output) output = output.output;
         if (typeof output === 'string') output = JSON.parse(output);
       } catch (e) { output = {}; }
-      console.log('OUTPUT:', output);
+
+      const baseCalories = parseFloat(output.calories) || 0;
+      const baseProtein = parseFloat(output.protein) || 0;
+      const baseCarbs = parseFloat(output.carbs) || 0;
+      const baseFats = parseFloat(output.fats) || parseFloat(output.fat) || 0;
+      const baseDescription = (output.description || '').toString().trim();
+      const baseName = (output.name || output.food_name || output.food || (baseDescription ? baseDescription.split('\n')[0] : 'Food')).slice(0, 60);
+
+      function computeHealthScore(cals, protein, carbs, fats) {
+        // Simple heuristic: less fat relative to calories => better score.
+        if (!cals || cals <= 0) return 0;
+        const fatCal = fats * 9;
+        const ratio = fatCal / cals; // 0..1+
+        let score = 10 - Math.round((ratio - 0.25) * 12);
+        score = Math.max(1, Math.min(10, score));
+        return score;
+      }
+
+      const baseHealthScore = computeHealthScore(baseCalories, baseProtein, baseCarbs, baseFats);
+      const baseHealthSuggestion = (output.health_suggestion || '').toString().trim();
+
+      // Default log date = today if missing
+      const logDateStr = pendingLogDate || new Date().toDateString();
+
+      let qty = 1;
+
+      function formatQtyValue(n) {
+        const q = Math.max(1, parseInt(n, 10) || 1);
+        return q;
+      }
+
+      function timeHHMM(d) {
+        return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      }
+
+      function render() {
+        const scaledCalories = Math.round(baseCalories * qty);
+        const scaledProtein = Math.round(baseProtein * qty);
+        const scaledCarbs = Math.round(baseCarbs * qty);
+        const scaledFats = Math.round(baseFats * qty);
+
+        document.getElementById('qtyVal').textContent = String(qty);
+        document.getElementById('calVal').textContent = String(scaledCalories);
+        document.getElementById('proteinVal').textContent = scaledProtein + 'g';
+        document.getElementById('carbsVal').textContent = scaledCarbs + 'g';
+        document.getElementById('fatsVal').textContent = scaledFats + 'g';
+
+        document.getElementById('healthScoreVal').textContent = `${baseHealthScore}/10`;
+        const pct = baseHealthScore / 10;
+        document.getElementById('healthScoreBar').style.width = `${pct * 100}%`;
+      }
+
       document.getElementById('result').innerHTML = `
-        <img src='${imgData}' alt='Poza aliment' class='ai-img'>
-        <div class='ai-content'>
-          <h3>Rezultat Analiză AI</h3>
-          
-          <div class="nutrition-grid">
-            <div class="nutrition-item">
-              <div class="nutrition-value">${parseFloat(output.calories) || 0}</div>
-              <div class="nutrition-label">Calorii</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-value">${parseFloat(output.protein) || 0}g</div>
-              <div class="nutrition-label">Proteine</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-value">${parseFloat(output.carbs) || 0}g</div>
-              <div class="nutrition-label">Carbohidrați</div>
-            </div>
-            <div class="nutrition-item">
-              <div class="nutrition-value">${parseFloat(output.fats) || parseFloat(output.fat) || 0}g</div>
-              <div class="nutrition-label">Grăsimi</div>
+        <div class="r-hero">
+          <img src="${imgData}" alt="Poza aliment" class="r-hero-img">
+          <div class="r-hero-title">Nutrition</div>
+        </div>
+        <div class="r-sheet">
+          <div class="r-title-row">
+            <div class="r-time">${timeHHMM(new Date())}</div>
+            <div class="r-food-name">${baseName}</div>
+            <div class="r-stepper">
+              <button class="r-step-btn" id="qtyMinus" aria-label="Decrease">-</button>
+              <span class="r-step-qty"><span id="qtyVal">1</span></span>
+              <button class="r-step-btn" id="qtyPlus" aria-label="Increase">+</button>
             </div>
           </div>
-          
-          ${output.description ? `
-          <div class="description-section">
-            <h4>Descriere</h4>
-            <div class="description-text">${output.description}</div>
+
+          <div class="r-cal-card">
+            <div class="r-cal-label">Calories</div>
+            <div class="r-cal-value"><span id="calVal">${Math.round(baseCalories)}</span></div>
           </div>
-          ` : ''}
-          
-          ${output.health_suggestion ? `
-          <div class="description-section">
-            <h4>Sugestie Sănătate</h4>
-            <div class="description-text">${output.health_suggestion}</div>
+
+          <div class="r-macro-row">
+            <div class="r-macro-card">
+              <div class="r-macro-label">Protein</div>
+              <div class="r-macro-value" id="proteinVal">${Math.round(baseProtein)}g</div>
+            </div>
+            <div class="r-macro-card">
+              <div class="r-macro-label">Carbs</div>
+              <div class="r-macro-value" id="carbsVal">${Math.round(baseCarbs)}g</div>
+            </div>
+            <div class="r-macro-card">
+              <div class="r-macro-label">Fats</div>
+              <div class="r-macro-value" id="fatsVal">${Math.round(baseFats)}g</div>
+            </div>
           </div>
-          ` : ''}
-          
-          <button id='backHomeBtn'>Back to Dashboard</button>
+
+          <div class="r-health">
+            <div class="r-health-top">
+              <div class="r-health-title">Health Score</div>
+              <div class="r-health-score" id="healthScoreVal">${baseHealthScore}/10</div>
+            </div>
+            <div class="r-health-bar">
+              <div class="r-health-bar-fill" id="healthScoreBar" style="width:${(baseHealthScore/10)*100}%;"></div>
+            </div>
+          </div>
+
+          ${
+            baseDescription ? `
+              <div class="r-section">
+                <div class="r-section-title">Details</div>
+                <div class="r-section-text">${baseDescription}</div>
+              </div>
+            ` : ''
+          }
+          ${
+            baseHealthSuggestion ? `
+              <div class="r-section">
+                <div class="r-section-title">Health suggestion</div>
+                <div class="r-section-text">${baseHealthSuggestion}</div>
+              </div>
+            ` : ''
+          }
+
+          <div class="r-actions">
+            <button class="r-fix-btn" id="fixBtn" type="button">Fix Results</button>
+            <button class="r-done-btn" id="doneBtn" type="button">Done</button>
+          </div>
         </div>
       `;
-      document.getElementById('backHomeBtn').onclick = function() {
+
+      // Inject minimal styles for this page
+      (function injectStyles() {
+        const styleId = 'resultPageExtraStyles';
+        if (document.getElementById(styleId)) return;
+        const s = document.createElement('style');
+        s.id = styleId;
+        s.textContent = `
+          .r-hero{width:100%;max-width:430px;margin:0 auto;position:relative;}
+          .r-hero-img{width:100%;height:220px;object-fit:cover;border-radius:1.2rem 1.2rem 0 0;display:block;}
+          .r-hero-title{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:rgba(0,0,0,0.35);color:#fff;font-weight:900;padding:0.35rem 0.85rem;border-radius:999px;font-size:0.95rem;}
+          .r-sheet{width:100%;max-width:430px;margin:0 auto;background:#fff;border-radius:0 0 1.2rem 1.2rem;padding:1.1rem 1rem 1.2rem;box-shadow:0 2px 14px rgba(0,0,0,0.08);box-sizing:border-box;}
+          .r-title-row{display:flex;flex-direction:column;gap:0.3rem;margin-bottom:1rem;}
+          .r-time{color:#888;font-weight:700;font-size:0.9rem;text-align:left;}
+          .r-food-name{font-size:1.25rem;font-weight:900;color:#111;line-height:1.2;}
+          .r-stepper{display:flex;align-items:center;justify-content:flex-end;gap:0.6rem;position:absolute;right:1.1rem;margin-top:-2.2rem;}
+          .r-step-btn{width:34px;height:34px;border-radius:10px;border:none;background:#f2f2f2;font-weight:900;cursor:pointer;}
+          .r-step-qty{min-width:22px;text-align:center;font-weight:900;background:#fff;border:2px solid #eee;border-radius:12px;padding:0.35rem 0.55rem;}
+          .r-cal-card{background:#f5f7fa;border-radius:1rem;padding:0.9rem 0.9rem;margin-bottom:1rem;}
+          .r-cal-label{color:#777;font-weight:800;font-size:0.92rem;margin-bottom:0.35rem;}
+          .r-cal-value{font-size:2rem;font-weight:950;color:#111;}
+          .r-macro-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;}
+          .r-macro-card{background:#f7f7f7;border-radius:1rem;padding:0.7rem 0.55rem;text-align:left;}
+          .r-macro-label{color:#555;font-weight:800;font-size:0.9rem;margin-bottom:0.35rem;}
+          .r-macro-value{font-weight:950;font-size:1.25rem;color:#111;}
+          .r-health{background:#f7f7f7;border-radius:1rem;padding:0.85rem 0.8rem;margin-bottom:1rem;}
+          .r-health-top{display:flex;align-items:center;justify-content:space-between;gap:0.8rem;margin-bottom:0.65rem;}
+          .r-health-title{font-weight:950;color:#111;}
+          .r-health-score{font-weight:950;color:#111;}
+          .r-health-bar{height:8px;background:#e8e8e8;border-radius:999px;overflow:hidden;}
+          .r-health-bar-fill{height:100%;background:#2ea44f;border-radius:999px;}
+          .r-section{background:#fff;border:1px solid #f0f0f0;border-radius:1rem;padding:0.85rem 0.8rem;margin-bottom:0.9rem;}
+          .r-section-title{font-weight:950;margin-bottom:0.45rem;}
+          .r-section-text{color:#444;font-size:0.95rem;line-height:1.35;white-space:pre-wrap;}
+          .r-actions{display:flex;gap:0.75rem;margin-top:0.5rem;}
+          .r-fix-btn{flex:1;border-radius:1rem;border:2px solid #111;background:#fff;color:#111;font-weight:950;padding:0.95rem 0.6rem;cursor:pointer;}
+          .r-done-btn{flex:1.1;border-radius:1rem;border:none;background:#111;color:#fff;font-weight:950;padding:0.95rem 0.6rem;cursor:pointer;}
+        `;
+        document.head.appendChild(s);
+      })();
+
+      // Wire stepper
+      document.getElementById('qtyMinus').onclick = function() {
+        qty = formatQtyValue(qty - 1);
+        render();
+      };
+      document.getElementById('qtyPlus').onclick = function() {
+        qty = formatQtyValue(qty + 1);
+        render();
+      };
+      document.getElementById('fixBtn').onclick = function() {
+        // Just scroll to stepper to make it feel like "Fix Results"
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      function saveScaledLog() {
+        const dateObj = new Date(logDateStr);
+        const dayKey = 'log_' + dateObj.toDateString();
+        let logs = JSON.parse(localStorage.getItem(dayKey) || '[]');
+        const firstScanToday = logs.length === 0;
+
+        const now = new Date();
+        const entry = {
+          food: qty === 1 ? baseName : `${baseName} x${qty}`,
+          calories: Math.round(baseCalories * qty),
+          protein: Math.round(baseProtein * qty),
+          carbs: Math.round(baseCarbs * qty),
+          fat: Math.round(baseFats * qty),
+          time: timeHHMM(now),
+          suggestion: baseHealthSuggestion || '',
+          image: imgData || null
+        };
+        logs.unshift(entry);
+        localStorage.setItem(dayKey, JSON.stringify(logs));
+
+        // Streak: increase only on first scan of that day
+        if (firstScanToday) {
+          const todayKey = dateObj.toDateString();
+          const yesterday = new Date(dateObj);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayKey = yesterday.toDateString();
+
+          let streak = parseInt(localStorage.getItem('streak') || '0', 10);
+          if (!Number.isFinite(streak) || streak < 0) streak = 0;
+          const lastLogDate = localStorage.getItem('last_log_date');
+
+          if (lastLogDate === yesterdayKey) streak = streak + 1;
+          else streak = 1;
+          localStorage.setItem('streak', String(streak));
+          localStorage.setItem('last_log_date', todayKey);
+        }
+      }
+
+      document.getElementById('doneBtn').onclick = function() {
+        saveScaledLog();
+
+        // Clear pending scan data
+        localStorage.removeItem('pending_ai_output');
+        localStorage.removeItem('pending_ai_image');
+        localStorage.removeItem('pending_ai_log_date');
+
+        // Keep last_ai_* for re-opening, but they are harmless
         window.location.href = 'home.html';
       };
+
+      render();
     </script>
   </body>
 </html> 

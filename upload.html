@@ -112,7 +112,12 @@
                 lastOutput = output;
                 localStorage.setItem('last_ai_output', JSON.stringify(output));
                 localStorage.setItem('last_ai_image', imgData);
-                saveScanToDailyLog(output, imgData);
+                // Save to pending keys. Final logging (with quantity adjustments) happens in result.html.
+                localStorage.setItem('pending_ai_output', JSON.stringify(output));
+                localStorage.setItem('pending_ai_image', imgData);
+                const uploadLogDate = localStorage.getItem('upload_log_date') || new Date().toDateString();
+                localStorage.setItem('pending_ai_log_date', uploadLogDate);
+                localStorage.removeItem('upload_log_date');
                 window.location.href = 'result.html';
               } catch (err) {
                 const msg = (err && err.message) ? err.message : String(err || '');

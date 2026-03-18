@@ -1145,10 +1145,14 @@
       // În timpul ăsta nu trebuie să salvăm înapoi în Firestore (altfel rescriem
       // datele cu ce a fost în localStorage / onboarding).
       var isRestoringProgress = false;
+      // La logout / schimbare conturi, suspendăm autosave ca să nu scriem
+      // progresul “contului anterior” înapoi în Firestore în timp ce localStorage
+      // e în curs de resetare.
+      var suspendAutoSave = false;
       
       // Funcție pentru salvarea completă a progresului
       window.saveUserProgress = function() {
-        if (isRestoringProgress) return;
+        if (suspendAutoSave || isRestoringProgress) return;
         var userId = getUserId();
         if(userId) {
           // Salvează toate logurile istorice (nu doar 7 zile)
@@ -1322,14 +1326,47 @@
       var logoutBtn = document.getElementById('logoutBtn');
       if(logoutBtn) {
         logoutBtn.onclick = function() {
+          suspendAutoSave = true;
           firebase.auth().signOut().finally(function() {
+            // Curățăm cache-ul local ca să nu se amestece progresul între conturi.
+            // (RestoreUserProgress nu suprascrie dacă logurile există deja în localStorage.)
+            try {
+              var keys = [];
+              for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (!k) continue;
+                if (k.indexOf('log_') === 0) keys.push(k);
+              }
+              keys.forEach(function(k) { localStorage.removeItem(k); });
+
+              // Goals / macro-uri / streak (date derivate, dar afectează UI și restore)
+              localStorage.removeItem('custom_macros');
+              localStorage.removeItem('calories_goal');
+              localStorage.removeItem('protein_goal');
+              localStorage.removeItem('carbs_goal');
+              localStorage.removeItem('fat_goal');
+              localStorage.removeItem('streak');
+              localStorage.removeItem('last_log_date');
+
+              // Upload state (opțional)
+              localStorage.removeItem('pending_ai_output');
+              localStorage.removeItem('pending_ai_image');
+              localStorage.removeItem('pending_ai_log_date');
+              localStorage.removeItem('pending_upload_image');
+              localStorage.removeItem('upload_log_date');
+            } catch(e) {}
+
             localStorage.removeItem('logged_in');
             localStorage.removeItem('user_id');
             localStorage.removeItem('subscribed');
+            localStorage.removeItem('admin_access');
+
             // Stay on home and show login UI/modal
             var forceModal = document.getElementById('forceLoginModal');
             if(forceModal) forceModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+
+            suspendAutoSave = false;
           });
         };
       }

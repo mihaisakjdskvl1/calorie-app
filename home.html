@@ -1085,6 +1085,11 @@
     window.addEventListener('DOMContentLoaded', function() {
       var btn = document.getElementById('loginBtn');
       var isSigningIn = false;
+      // Keeps the Google session across app launches (and avoids re-login).
+      // If the user clears site data or logs out, sign-in is required again.
+      try {
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      } catch(e) {}
       function googleLoginHandler() {
         if (isSigningIn) return; // prevents auth/cancelled-popup-request
         isSigningIn = true;

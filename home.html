@@ -872,11 +872,13 @@
       // Progress rings
       function setRing(id, value, max, ringId) {
         const circle = document.getElementById(ringId);
-        const r = 15;
+        const r = parseFloat(circle.getAttribute('r') || '15');
         const c = 2 * Math.PI * r;
         const pct = Math.max(0, Math.min(1, value / max));
-        circle.setAttribute('stroke-dasharray', c);
+        // Use "dash-gap" so the colored part can truly disappear when pct=0
+        circle.setAttribute('stroke-dasharray', `${c} ${c}`);
         circle.setAttribute('stroke-dashoffset', c * (1 - pct));
+        circle.setAttribute('stroke-linecap', 'round');
       }
       // Rings show remaining fraction of today's goal (resets per-day automatically)
       setRing(0, goals.calories - sum.calories, Math.max(1, goals.calories), 'calRing');

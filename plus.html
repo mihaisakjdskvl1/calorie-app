@@ -49,44 +49,110 @@
       </ul>
 
       <div class="cta">
-        <button class="btn primary" id="payBtn">Subscribe with Stripe</button>
+        <div id="paypal-button-container"></div>
         <button class="btn secondary" onclick="window.location.href='home.html'">Not now</button>
       </div>
       <div class="fine" id="fineText">
         After payment, you'll be redirected back here to unlock Plus.
       </div>
+      <div class="warn" id="paypalWarn"></div>
     </div>
   </div>
 
   <script>
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_6oUaEX6eJ8WkcQQacD5os03';
+    // TODO: completează valorile din PayPal (Developer / Subscriptions)
+    // - PAYPAL_CLIENT_ID: client-id pentru SDK
+    // - PAYPAL_SUBSCRIPTION_PLAN_ID: plan-id pentru abonamentul lunar (15$ / month)
+    const PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_CLIENT_ID';
+    const PAYPAL_SUBSCRIPTION_PLAN_ID = 'YOUR_PAYPAL_SUBSCRIPTION_PLAN_ID';
+
+    function setWarn(msg) {
+      const el = document.getElementById('paypalWarn');
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
 
     function shouldUnlockFromReturn() {
       const params = new URLSearchParams(window.location.search);
       const directFlags = [
         params.get('paid') === '1',
         params.get('success') === '1',
-        params.get('stripe_success') === '1',
-        params.get('redirect_status') === 'succeeded',
-        params.get('payment_status') === 'succeeded'
+        params.get('paypal_success') === '1'
       ];
-      // Also allow a generic “succeeded” in any key.
-      if (directFlags.some(Boolean)) return true;
-      for (const [_, v] of params.entries()) {
-        if (typeof v === 'string' && v.toLowerCase().includes('succeeded')) return true;
-      }
-      return false;
+      return directFlags.some(Boolean);
     }
 
-    // If Stripe redirects back with a success flag, unlock immediately.
+    // If PayPal redirects back with a success flag, unlock immediately.
     if (shouldUnlockFromReturn()) {
       localStorage.setItem('subscribed', '1');
       window.location.href = 'home.html';
     }
 
-    document.getElementById('payBtn').onclick = function() {
-      window.location.href = STRIPE_PAYMENT_LINK;
-    };
+    function unlockAndGoHome() {
+      localStorage.setItem('subscribed', '1');
+      window.location.href = 'home.html';
+    }
+
+    function renderPayPalButtons() {
+      if (!PAYPAL_CLIENT_ID || PAYPAL_CLIENT_ID.includes('YOUR_PAYPAL_CLIENT_ID')) {
+        setWarn('Setează `PAYPAL_CLIENT_ID` în plus.html pentru PayPal.');
+        return;
+      }
+      if (!PAYPAL_SUBSCRIPTION_PLAN_ID || PAYPAL_SUBSCRIPTION_PLAN_ID.includes('YOUR_PAYPAL_SUBSCRIPTION_PLAN_ID')) {
+        setWarn('Setează `PAYPAL_SUBSCRIPTION_PLAN_ID` (planul abonamentului) în plus.html.');
+        return;
+      }
+      if (!window.paypal || !window.paypal.Buttons) {
+        setWarn('PayPal SDK nu s-a încărcat corect.');
+        return;
+      }
+
+      window.paypal
+        .Buttons({
+          style: {
+            layout: 'vertical',
+            color: 'gold',
+            shape: 'pill',
+            label: 'subscribe'
+          },
+          createSubscription: function(data, actions) {
+            return actions.subscription.create({
+              plan_id: PAYPAL_SUBSCRIPTION_PLAN_ID
+            });
+          },
+          onApprove: function(data, actions) {
+            // Pentru prototip: deblocăm imediat după aprobarea utilizatorului.
+            // În producție, recomand confirmare din backend / webhook.
+            unlockAndGoHome();
+          },
+          onError: function(err) {
+            console.error(err);
+            setWarn('A apărut o eroare la PayPal. Încearcă din nou.');
+          }
+        })
+        .render('#paypal-button-container');
+    }
+
+    // Încarcă PayPal SDK dinamic (ca să poți folosi client-id fără template).
+    (function loadPayPalSdk() {
+      if (window.paypal && window.paypal.Buttons) {
+        renderPayPalButtons();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src =
+        'https://www.paypal.com/sdk/js?client-id=' +
+        encodeURIComponent(PAYPAL_CLIENT_ID) +
+        '&vault=true&intent=subscription';
+      script.onload = function() {
+        renderPayPalButtons();
+      };
+      script.onerror = function() {
+        setWarn('Nu am putut încărca PayPal SDK.');
+      };
+      document.head.appendChild(script);
+    })();
   </script>
 </body>
 </html>

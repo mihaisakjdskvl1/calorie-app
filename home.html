@@ -1325,8 +1325,10 @@
         firebase.auth().onAuthStateChanged(function(user) {
           var forceModal = document.getElementById('forceLoginModal');
           if(!user) {
-            if(forceModal) forceModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            // Don't block the whole UI; let the user switch accounts via the top Login button.
+            // Scan is still gated in handleScanClick().
+            if(forceModal) forceModal.style.display = 'none';
+            document.body.style.overflow = '';
           } else {
             if(forceModal) forceModal.style.display = 'none';
             document.body.style.overflow = '';

@@ -665,9 +665,9 @@
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.8rem;margin-bottom:0.4rem;">
-      <div style="font-weight:800;font-size:1.05rem;color:#111;" id="selectedDateLabel"></div>
-      <input id="datePicker" type="date" style="border:2px solid #eee;border-radius:1rem;padding:0.45rem 0.7rem;font-weight:700;background:#fff;cursor:pointer;">
+    <div id="dateHeader" style="position:relative;display:flex;align-items:center;justify-content:flex-start;gap:0.8rem;margin-bottom:0.35rem;">
+      <div style="font-weight:900;font-size:0.95rem;color:#111;" id="selectedDateLabel"></div>
+      <input id="datePicker" type="date" style="position:absolute;left:50%;transform:translateX(-50%);border:2px solid #eee;border-radius:1rem;padding:0.45rem 0.7rem;font-weight:700;background:#fff;cursor:pointer;">
     </div>
     <div class="calendar" id="calendar"></div>
     <div class="summary-card">
@@ -732,8 +732,6 @@
       document.getElementById('calendar').innerHTML = html;
     }
     renderCalendar();
-    // Streak (placeholder)
-    document.getElementById('streakCount').textContent = '1';
     // Kept for backward-compat: always render day-based dashboard (consumed/left) instead of raw goals.
     window.loadGoals = function() {
       ensureMacroConsistency();

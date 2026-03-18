@@ -23,7 +23,9 @@
         if (!output) return;
         const today = new Date();
         const dayKey = 'log_' + today.toDateString();
-        let logs = JSON.parse(localStorage.getItem(dayKey) || '[]');
+        const logsBefore = JSON.parse(localStorage.getItem(dayKey) || '[]');
+        const firstScanToday = logsBefore.length === 0;
+        let logs = logsBefore;
         const entry = {
           food: output.description || 'Food',
           calories: parseFloat(output.calories) || 0,
@@ -37,6 +39,24 @@
         logs.unshift(entry);
         localStorage.setItem(dayKey, JSON.stringify(logs));
         localStorage.setItem('last_scan_saved_at', today.toISOString());
+
+        // Streak update: increment only on the first scan of the day
+        if (firstScanToday) {
+          const todayKey = today.toDateString();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          const yesterdayKey = yesterday.toDateString();
+
+          let streak = parseInt(localStorage.getItem('streak') || '0', 10);
+          if (!Number.isFinite(streak) || streak < 0) streak = 0;
+          const lastLogDate = localStorage.getItem('last_log_date');
+
+          if (lastLogDate === yesterdayKey) streak = streak + 1;
+          else streak = 1;
+
+          localStorage.setItem('streak', String(streak));
+          localStorage.setItem('last_log_date', todayKey);
+        }
       }
       function normalizeWebhookResponse(data) {
         let d = data;

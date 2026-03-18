@@ -1175,12 +1175,23 @@
             const db = firebase.firestore();
             let macrosObj = {};
             try { macrosObj = macros ? JSON.parse(macros) : {}; } catch(e) {}
-            db.collection('users').doc(firebase.auth().currentUser.uid).set({
-              progress: allLogs,
-              macros: macrosObj || {},
-              settings: settings || {},
-              updatedAt: new Date().toISOString()
-            }, {merge:true});
+            const uid = firebase.auth().currentUser.uid;
+            const docRef = db.collection('users').doc(uid);
+            // Merge with existing progress so we don't lose older days if localStorage
+            // still doesn't contain everything (e.g., first restore after an update).
+            docRef.get().then(function(doc) {
+              let existing = {};
+              try {
+                if(doc && doc.exists && doc.data && doc.data().progress) existing = doc.data().progress;
+              } catch(e) {}
+              const mergedProgress = Object.assign({}, existing || {}, allLogs || {});
+              docRef.set({
+                progress: mergedProgress,
+                macros: macrosObj || {},
+                settings: settings || {},
+                updatedAt: new Date().toISOString()
+              }, {merge:true});
+            }).catch(function(){});
           }
         }
       }
@@ -1197,7 +1208,13 @@
             try {
               var logs = JSON.parse(saved);
               for(var k in logs) {
-                if(logs[k] !== null && logs[k] !== undefined) localStorage.setItem(k, logs[k]);
+                // Don't overwrite logs that were created locally after the page opened
+                // (prevents losing the newest scans due to an older Firestore restore).
+                if(logs[k] !== null && logs[k] !== undefined) {
+                  if (localStorage.getItem(k) === null || localStorage.getItem(k) === undefined) {
+                    localStorage.setItem(k, logs[k]);
+                  }
+                }
               }
             } catch(e){}
           }
@@ -1228,7 +1245,11 @@
                   try {
                     var logs = data.progress;
                     for(var k in logs) {
-                      if(logs[k] !== null && logs[k] !== undefined) localStorage.setItem(k, logs[k]);
+                      if(logs[k] !== null && logs[k] !== undefined) {
+                        if (localStorage.getItem(k) === null || localStorage.getItem(k) === undefined) {
+                          localStorage.setItem(k, logs[k]);
+                        }
+                      }
                     }
                   } catch(e){}
                 }

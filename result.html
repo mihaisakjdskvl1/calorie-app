@@ -156,6 +156,23 @@
         }
       }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCrIsRUiKYGKyrD8i0wDa3SRZDNrlp2H_E",
+        authDomain: "logare-d7168.firebaseapp.com",
+        projectId: "logare-d7168",
+        storageBucket: "logare-d7168.appspot.com",
+        messagingSenderId: "575737128202",
+        appId: "1:575737128202:web:666bb22b5048f1030886f3",
+        measurementId: "G-DKJVYKE0H9"
+      };
+      if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+        firebase.initializeApp(firebaseConfig);
+      }
+    </script>
   </head>
   <body>
     <div class="result-container">
@@ -394,6 +411,95 @@
         }
       }
 
+      /** Aceeași logică ca saveUserProgress din home.html: trimite progress + macros + settings în Firestore. */
+      function syncProgressToFirestore() {
+        return new Promise(function(resolve) {
+          var userId = localStorage.getItem('user_id');
+          if (!userId || typeof firebase === 'undefined') {
+            resolve();
+            return;
+          }
+
+          function uploadForUser(user) {
+            if (!user || user.uid !== userId) {
+              resolve();
+              return;
+            }
+            var allLogs = {};
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && k.indexOf('log_') === 0) {
+                allLogs[k] = localStorage.getItem(k);
+              }
+            }
+            try {
+              localStorage.setItem('progress_' + userId, JSON.stringify(allLogs));
+            } catch (e) {}
+
+            var macros = localStorage.getItem('custom_macros');
+            if (macros) localStorage.setItem('macros_' + userId, macros);
+
+            var settings = {
+              subscribed: localStorage.getItem('subscribed'),
+              admin_access: localStorage.getItem('admin_access'),
+              streak: localStorage.getItem('streak'),
+              last_log_date: localStorage.getItem('last_log_date'),
+              calories_goal: localStorage.getItem('calories_goal'),
+              protein_goal: localStorage.getItem('protein_goal'),
+              carbs_goal: localStorage.getItem('carbs_goal'),
+              fat_goal: localStorage.getItem('fat_goal')
+            };
+            try {
+              localStorage.setItem('settings_' + userId, JSON.stringify(settings));
+            } catch (e) {}
+
+            var macrosObj = {};
+            try {
+              macrosObj = macros ? JSON.parse(macros) : {};
+            } catch (e) {}
+
+            var db = firebase.firestore();
+            var docRef = db.collection('users').doc(user.uid);
+            docRef
+              .get()
+              .then(function(doc) {
+                var existing = {};
+                try {
+                  if (doc && doc.exists && doc.data && doc.data().progress) {
+                    existing = doc.data().progress;
+                  }
+                } catch (e) {}
+                var mergedProgress = Object.assign({}, existing || {}, allLogs || {});
+                return docRef.set(
+                  {
+                    progress: mergedProgress,
+                    macros: macrosObj || {},
+                    settings: settings || {},
+                    updatedAt: new Date().toISOString()
+                  },
+                  { merge: true }
+                );
+              })
+              .then(function() {
+                resolve();
+              })
+              .catch(function() {
+                resolve();
+              });
+          }
+
+          var cur = firebase.auth().currentUser;
+          if (cur) {
+            uploadForUser(cur);
+            return;
+          }
+          var unsub = firebase.auth().onAuthStateChanged(function(user) {
+            unsub();
+            uploadForUser(user);
+          });
+        });
+      }
+
       document.getElementById('doneBtn').onclick = function() {
         saveScaledLog();
 
@@ -403,7 +509,14 @@
         localStorage.removeItem('pending_ai_log_date');
 
         // Keep last_ai_* for re-opening, but they are harmless
-        window.location.href = 'home.html';
+        var doneBtn = document.getElementById('doneBtn');
+        if (doneBtn) {
+          doneBtn.disabled = true;
+          doneBtn.textContent = 'Se salvează…';
+        }
+        syncProgressToFirestore().then(function() {
+          window.location.href = 'home.html';
+        });
       };
 
       render();

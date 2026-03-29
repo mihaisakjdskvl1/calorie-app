@@ -160,7 +160,7 @@
 </head>
 <body>
   <script>
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+    if (sessionStorage.getItem('cal_google_session') === '1' && sessionStorage.getItem('onb_custom_macros')) {
       window.location.href = 'home.html';
     }
   </script>
@@ -195,8 +195,8 @@
       e.preventDefault();
       const height = document.getElementById('height').value;
       const weight = document.getElementById('weight').value;
-      localStorage.setItem('user_height', height);
-      localStorage.setItem('user_weight', weight);
+      sessionStorage.setItem('user_height', height);
+      sessionStorage.setItem('user_weight', weight);
       window.location.href = 'goal-selection.html';
     };
   </script>

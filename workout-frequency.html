@@ -201,7 +201,7 @@
     });
     document.getElementById('continueBtn').onclick = function() {
       if(selectedValue) {
-        localStorage.setItem('user_workout_frequency', selectedValue);
+        sessionStorage.setItem('user_workout_frequency', selectedValue);
         window.location.href = 'goal-selection.html';
       }
     };

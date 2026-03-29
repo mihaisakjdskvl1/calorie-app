@@ -160,7 +160,7 @@
 </head>
 <body>
   <script>
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+    if (sessionStorage.getItem('cal_google_session') === '1' && sessionStorage.getItem('onb_custom_macros')) {
       window.location.href = 'home.html';
     }
   </script>
@@ -212,7 +212,7 @@
       const month = document.getElementById('month').value;
       const day = document.getElementById('day').value;
       const year = document.getElementById('year').value;
-      localStorage.setItem('user_birthdate', JSON.stringify({month, day, year}));
+      sessionStorage.setItem('user_birthdate', JSON.stringify({month, day, year}));
       window.location.href = 'summary.html';
     };
   </script>

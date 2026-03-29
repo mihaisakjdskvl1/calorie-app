@@ -15,16 +15,46 @@
       .suggestion { background:#f6f6f6; border-radius:0.7rem; padding:1rem; color:#333; margin-top:1.2rem; }
       .back-btn { margin-top:2rem; background:#111; color:#fff; border:none; border-radius:1.5rem; font-size:1.1rem; font-weight:700; padding:0.7rem 2.2rem; cursor:pointer; box-shadow:0 2px 8px 0 rgba(0,0,0,0.07); }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyCrIsRUiKYGKyrD8i0wDa3SRZDNrlp2H_E",
+        authDomain: "logare-d7168.firebaseapp.com",
+        projectId: "logare-d7168",
+        storageBucket: "logare-d7168.appspot.com",
+        messagingSenderId: "575737128202",
+        appId: "1:575737128202:web:666bb22b5048f1030886f3",
+        measurementId: "G-DKJVYKE0H9"
+      };
+      if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+        firebase.initializeApp(firebaseConfig);
+      }
+    </script>
   </head>
   <body>
-    <div class="container" id="detail"></div>
+    <div class="container" id="detail">Se încarcă…</div>
     <script>
       const params = new URLSearchParams(window.location.search);
       const day = params.get('day');
-      const idx = parseInt(params.get('idx'));
-      const logs = JSON.parse(localStorage.getItem('log_' + day) || '[]');
-      const log = logs[idx];
-      if (log) {
+      const idx = parseInt(params.get('idx'), 10);
+      const dayKey = 'log_' + day;
+
+      function parseLog(raw) {
+        if (raw == null) return [];
+        try {
+          if (typeof raw === 'string') return JSON.parse(raw);
+          if (Array.isArray(raw)) return raw;
+        } catch (e) {}
+        return [];
+      }
+
+      function render(log) {
+        if (!log) {
+          document.getElementById('detail').innerHTML = '<div style="color:#888;">Nu există detalii pentru această înregistrare.</div>';
+          return;
+        }
         document.getElementById('detail').innerHTML = `
           ${log.image ? `<img src='${log.image}' class='food-img'>` : ''}
           <div class='food-title'>${log.food}</div>
@@ -36,11 +66,26 @@
             <div><b>Grăsimi:</b> ${log.fat || 0}g</div>
           </div>
           <div class='suggestion'><b>Sugestie AI:</b><br>${log.suggestion || ''}</div>
-          <button class='back-btn' onclick="window.history.back()">Înapoi</button>
+          <button class='back-btn' onclick="window.location.href='home.html'">Înapoi la home</button>
         `;
-      } else {
-        document.getElementById('detail').innerHTML = '<div style="color:#888;">Nu există detalii pentru această înregistrare.</div>';
       }
+
+      var unsub = firebase.auth().onAuthStateChanged(function(user) {
+        unsub();
+        if (!user) {
+          document.getElementById('detail').innerHTML = '<div style="color:#888;">Loghează-te pentru a vedea detaliile.</div><button class="back-btn" onclick="location.href=\'home.html\'">Home</button>';
+          return;
+        }
+        firebase.firestore().collection('users').doc(user.uid).get().then(function(doc) {
+          var logs = [];
+          if (doc.exists && doc.data().progress && doc.data().progress[dayKey]) {
+            logs = parseLog(doc.data().progress[dayKey]);
+          }
+          render(logs[idx]);
+        }).catch(function() {
+          render(null);
+        });
+      });
     </script>
   </body>
-</html> 
+</html>

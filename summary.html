@@ -257,7 +257,7 @@
 </head>
 <body>
   <script>
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+    if (sessionStorage.getItem('cal_google_session') === '1' && sessionStorage.getItem('onb_custom_macros')) {
       window.location.href = 'home.html';
     }
   </script>
@@ -325,12 +325,12 @@
     function calculatePlan() {
       let debug = '';
       // Get user data
-      const height = parseFloat(localStorage.getItem('user_height') || '170');
-      const weight = parseFloat(localStorage.getItem('user_weight') || '70');
-      const goal = localStorage.getItem('user_goal') || 'maintain';
-      const gender = localStorage.getItem('user_gender') || 'male';
-      const workout = localStorage.getItem('user_workout_frequency') || '0-2';
-      const birthdate = JSON.parse(localStorage.getItem('user_birthdate') || '{"month":1,"day":1,"year":2000}');
+      const height = parseFloat(sessionStorage.getItem('user_height') || '170');
+      const weight = parseFloat(sessionStorage.getItem('user_weight') || '70');
+      const goal = sessionStorage.getItem('user_goal') || 'maintain';
+      const gender = sessionStorage.getItem('user_gender') || 'male';
+      const workout = sessionStorage.getItem('user_workout_frequency') || '0-2';
+      const birthdate = JSON.parse(sessionStorage.getItem('user_birthdate') || '{"month":1,"day":1,"year":2000}');
       debug += `User data:\nHeight: ${height} cm\nWeight: ${weight} kg\nGoal: ${goal}\nGender: ${gender}\nWorkout: ${workout}\nBirthdate: ${JSON.stringify(birthdate)}\n`;
       // Age
       const age = getAge(birthdate);
@@ -411,18 +411,8 @@
         carbs: carbs_g,
         fat: fat_g
       };
-      localStorage.setItem('calories_goal', calcGoals.calories);
-      localStorage.setItem('protein_goal', calcGoals.protein);
-      localStorage.setItem('carbs_goal', calcGoals.carbs);
-      localStorage.setItem('fat_goal', calcGoals.fat);
-      // For a newly calculated plan, reset custom macros to match the calculation.
-      // Manual edits (via the pencil) will overwrite afterwards.
-      localStorage.setItem('custom_macros', JSON.stringify(calcGoals));
-      
-      // Salvează și progresul per user dacă există funcția
-      if(window.saveUserProgress) {
-        setTimeout(window.saveUserProgress, 100);
-      }
+      // Trimis la Firebase după login pe home (mergeOnboardingFromSession citește onb_custom_macros).
+      sessionStorage.setItem('onb_custom_macros', JSON.stringify(calcGoals));
     }
     calculatePlan();
 
@@ -450,15 +440,9 @@
       function save() {
         let newVal = input.value;
         if (!newVal || isNaN(newVal) || newVal < 0) newVal = oldVal;
-        // Save to localStorage for persistence
-        let custom = JSON.parse(localStorage.getItem('custom_macros')||'{}');
-        custom[type] = parseInt(newVal);
-        localStorage.setItem('custom_macros', JSON.stringify(custom));
-        
-        // Salvează și progresul per user dacă există funcția
-        if(window.saveUserProgress) {
-          setTimeout(window.saveUserProgress, 100);
-        }
+        let custom = JSON.parse(sessionStorage.getItem('onb_custom_macros')||'{}');
+        custom[type] = parseInt(newVal, 10);
+        sessionStorage.setItem('onb_custom_macros', JSON.stringify(custom));
         // Update UI
         input.replaceWith(valElem);
         valElem.textContent = newVal;

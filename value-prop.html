@@ -126,7 +126,7 @@
 </head>
 <body>
   <script>
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+    if (sessionStorage.getItem('cal_google_session') === '1' && sessionStorage.getItem('onb_custom_macros')) {
       window.location.href = 'home.html';
     }
   </script>

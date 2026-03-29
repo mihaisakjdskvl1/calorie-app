@@ -24,6 +24,7 @@
     };
     firebase.initializeApp(firebaseConfig);
   </script>
+  <script src="js/app-store-firebase.js"></script>
   <style>
     :root {
       --main-yellow: #FFD600;
@@ -610,9 +611,9 @@
 </head>
 <body>
   <script>
-    // Blochează accesul la paginile de onboarding dacă utilizatorul e logat
+    // Blochează onboarding dacă există deja sesiune Google (marcaj în sessionStorage pe home după login).
     if (window.location.pathname.match(/welcome|value-prop|height-weight|goal-selection|gender-selection|birthdate|summary/)) {
-      if (localStorage.getItem('logged_in')) {
+      if (sessionStorage.getItem('cal_google_session') === '1') {
         window.location.href = 'home.html';
       }
     }
@@ -809,18 +810,25 @@
       });
     }
     renderCalendarSlider();
-    // Store logs per day in localStorage
+    // Loguri pe zi: doar în AppDataStore → Firestore
     function getDayKeyForDate(dateObj) {
       return 'log_' + new Date(dateObj).toDateString();
     }
-    // Macro goals
     function readStoredNumber(key, fallback) {
-      const raw = localStorage.getItem(key);
-      const n = raw === null ? NaN : parseFloat(raw);
+      const s = AppDataStore.data.settings || {};
+      const m = AppDataStore.data.macros || {};
+      let raw = s[key];
+      if (raw == null || raw === '') {
+        if (key === 'calories_goal') raw = m.calories;
+        else if (key === 'protein_goal') raw = m.protein;
+        else if (key === 'carbs_goal') raw = m.carbs;
+        else if (key === 'fat_goal') raw = m.fat;
+      }
+      const n = raw === null || raw === undefined ? NaN : parseFloat(raw);
       return Number.isFinite(n) ? n : fallback;
     }
     function getMacroGoals() {
-      const macros = JSON.parse(localStorage.getItem('custom_macros')||'{}');
+      const macros = AppDataStore.data.macros || {};
       return {
         calories: Number.isFinite(parseFloat(macros.calories)) ? parseFloat(macros.calories) : readStoredNumber('calories_goal', 2000),
         protein: Number.isFinite(parseFloat(macros.protein)) ? parseFloat(macros.protein) : readStoredNumber('protein_goal', 100),
@@ -829,14 +837,13 @@
       };
     }
     function ensureMacroConsistency() {
-      const custom = JSON.parse(localStorage.getItem('custom_macros') || '{}');
-      const caloriesGoal = parseInt(localStorage.getItem('calories_goal') || '0');
-      const proteinGoal = parseInt(localStorage.getItem('protein_goal') || '0');
-      const carbsGoal = parseInt(localStorage.getItem('carbs_goal') || '0');
-      const fatGoal = parseInt(localStorage.getItem('fat_goal') || '0');
+      const custom = AppDataStore.data.macros || {};
+      const s = AppDataStore.data.settings || {};
+      const caloriesGoal = parseInt(s.calories_goal || '0', 10) || 0;
+      const proteinGoal = parseInt(s.protein_goal || '0', 10) || 0;
+      const carbsGoal = parseInt(s.carbs_goal || '0', 10) || 0;
+      const fatGoal = parseInt(s.fat_goal || '0', 10) || 0;
 
-      // If onboarding goals exist but custom macros are missing/partial,
-      // seed custom_macros so dashboard values stay stable after login restore.
       const merged = {
         calories: Number.isFinite(custom.calories) ? custom.calories : caloriesGoal,
         protein: Number.isFinite(custom.protein) ? custom.protein : proteinGoal,
@@ -844,7 +851,18 @@
         fat: Number.isFinite(custom.fat) ? custom.fat : fatGoal
       };
       if (merged.calories > 0 && merged.protein >= 0 && merged.carbs >= 0 && merged.fat >= 0) {
-        localStorage.setItem('custom_macros', JSON.stringify(merged));
+        AppDataStore.data.macros = {
+          calories: merged.calories,
+          protein: merged.protein,
+          carbs: merged.carbs,
+          fat: merged.fat
+        };
+        AppDataStore.data.settings = Object.assign({}, s, {
+          calories_goal: String(merged.calories),
+          protein_goal: String(merged.protein),
+          carbs_goal: String(merged.carbs),
+          fat_goal: String(merged.fat)
+        });
       }
     }
     // Update macros and logs for selected day
@@ -852,7 +870,7 @@
       // Determină data pentru ziua selectată
       const selectedDate = selectedDateObj || new Date();
       const dayKey = getDayKeyForDate(selectedDate);
-      let logs = JSON.parse(localStorage.getItem(dayKey)||'[]');
+      let logs = AppDataStore.getLogDay(dayKey);
       // Calculează suma valorilor logate pentru ziua selectată
       let sum = {calories:0, protein:0, carbs:0, fat:0};
       logs.forEach(l => {
@@ -911,7 +929,7 @@
       calculateStreak();
     }
     window.showLogDetail = function(idx) {
-      const logs = JSON.parse(localStorage.getItem(getDayKeyForDate(selectedDateObj))||'[]');
+      const logs = AppDataStore.getLogDay(getDayKeyForDate(selectedDateObj));
       const l = logs[idx];
       const modal = document.createElement('div');
       modal.className = 'log-modal';
@@ -931,29 +949,30 @@
     function calculateStreak() {
       const today = new Date();
       const todayKey = today.toDateString();
-      let streak = parseInt(localStorage.getItem('streak') || '0');
-      let lastLogDate = localStorage.getItem('last_log_date');
-      // Check if user logged today
-      const logsToday = JSON.parse(localStorage.getItem('log_' + todayKey) || '[]');
+      var st = AppDataStore.data.settings || {};
+      let streak = parseInt(st.streak || '0', 10);
+      if (!Number.isFinite(streak) || streak < 0) streak = 0;
+      let lastLogDate = st.last_log_date || '';
+      const logsToday = AppDataStore.getLogDay('log_' + todayKey);
       if (logsToday.length > 0) {
         if (lastLogDate !== todayKey) {
-          // If last log was yesterday, increment streak, else reset to 1
           const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
           if (lastLogDate === yesterday.toDateString()) {
             streak++;
           } else {
             streak = 1;
           }
-          localStorage.setItem('streak', streak);
-          localStorage.setItem('last_log_date', todayKey);
+          AppDataStore.data.settings = Object.assign({}, st, {
+            streak: String(streak),
+            last_log_date: todayKey
+          });
         }
       } else {
-        // If today is missed, but last log was not today, check if yesterday was missed
         if (lastLogDate !== todayKey) {
           const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
           if (lastLogDate !== yesterday.toDateString()) {
             streak = 0;
-            localStorage.setItem('streak', streak);
+            AppDataStore.data.settings = Object.assign({}, AppDataStore.data.settings || {}, { streak: String(streak) });
           }
         }
       }
@@ -994,15 +1013,13 @@
       canvas.getContext('2d').drawImage(video, 0, 0);
       canvas.toBlob(function(blob) {
         closeCamera();
-        // Save image as base64 in localStorage and redirect to upload.html
+        // sessionStorage pentru poză până la upload (prea mare pentru Firestore doc)
         const reader = new FileReader();
         reader.onloadend = function() {
           console.log('Base64 image length:', reader.result.length);
           try {
-            localStorage.setItem('pending_upload_image', reader.result);
-            // Remember which day the user selected on dashboard,
-            // so we can log analysis results to the same day.
-            localStorage.setItem('upload_log_date', selectedDateObj.toDateString());
+            sessionStorage.setItem('pending_upload_image', reader.result);
+            sessionStorage.setItem('upload_log_date', selectedDateObj.toDateString());
             window.location.href = 'upload.html';
           } catch(e) {
             alert('Imaginea este prea mare pentru a fi salvată. Încearcă să faci o poză mai mică!');
@@ -1012,10 +1029,6 @@
         reader.readAsDataURL(blob);
       }, 'image/jpeg');
     }
-    // Initial load
-    ensureMacroConsistency();
-    updateMacrosAndLogs();
-
     function closeScanChoice() {
       const modal = document.querySelector('.scan-choice-modal');
       if (modal) modal.remove();
@@ -1025,11 +1038,12 @@
     var TEMP_PLUS_PAYMENT_DISABLED = true;
     function hasPlus() {
       if (TEMP_PLUS_PAYMENT_DISABLED) return true;
-      return localStorage.getItem('subscribed') === '1';
+      var st = AppDataStore.data.settings || {};
+      return st.subscribed === '1' || st.subscribed === 1 || st.subscribed === true;
     }
     window.handleScanClick = function() {
       // Must be logged in (Google) AND subscribed to Plus to access camera
-      if (!localStorage.getItem('user_id')) {
+      if (!firebase.auth().currentUser) {
         var forceModal = document.getElementById('forceLoginModal');
         if (forceModal) forceModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -1086,9 +1100,8 @@
       const reader = new FileReader();
       reader.onloadend = function() {
         try {
-          localStorage.setItem('pending_upload_image', reader.result);
-          // Remember which day the user selected on dashboard.
-          localStorage.setItem('upload_log_date', selectedDateObj.toDateString());
+          sessionStorage.setItem('pending_upload_image', reader.result);
+          sessionStorage.setItem('upload_log_date', selectedDateObj.toDateString());
           window.location.href = 'upload.html';
         } catch (err) {
           alert('Imaginea este prea mare pentru a fi salvată. Încearcă o poză mai mică!');
@@ -1112,9 +1125,7 @@
         isSigningIn = true;
         var provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider).then(function(res){
-          var user = res.user;
-          localStorage.setItem('logged_in','1');
-          localStorage.setItem('user_id', user.uid);
+          try { sessionStorage.setItem('cal_google_session', '1'); } catch (e) {}
           window.location.reload();
         }).catch(function(e){
           var loginMsgEl = document.getElementById('loginMsg');
@@ -1140,162 +1151,43 @@
       if(googleBtn) googleBtn.onclick = googleLoginHandler;
       // --- Salvare și restaurare progres per user Google ---
       function getUserId() {
-        return localStorage.getItem('user_id') || null;
+        return firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
       }
       
-      // IMPORTANT:
-      // La login, restoreUserProgress() încarcă asincron datele din Firestore.
-      // În timpul ăsta nu trebuie să salvăm înapoi în Firestore (altfel rescriem
-      // datele cu ce a fost în localStorage / onboarding).
+      // În timpul încărcării din Firestore nu salvăm înapoi (evită overwrite).
       var isRestoringProgress = false;
-      // La logout / schimbare conturi, suspendăm autosave ca să nu scriem
-      // progresul “contului anterior” înapoi în Firestore în timp ce localStorage
-      // e în curs de resetare.
+      // La logout suspendăm autosave până se golește starea locală.
       var suspendAutoSave = false;
       
-      // Funcție pentru salvarea completă a progresului
+      // Salvează AppData în Firestore (fără localStorage)
       window.saveUserProgress = function() {
         if (suspendAutoSave || isRestoringProgress) return;
         var userId = getUserId();
-        if(userId) {
-          // Salvează toate logurile istorice (nu doar 7 zile)
-          var allLogs = {};
-          for (var i = 0; i < localStorage.length; i++) {
-            var k = localStorage.key(i);
-            if (k && k.indexOf('log_') === 0) {
-              allLogs[k] = localStorage.getItem(k);
-            }
-          }
-          localStorage.setItem('progress_' + userId, JSON.stringify(allLogs));
-          
-          // Salvează și custom_macros
-          var macros = localStorage.getItem('custom_macros');
-          if(macros) localStorage.setItem('macros_' + userId, macros);
-          
-          // Salvează și alte setări importante
-          var settings = {
-            subscribed: localStorage.getItem('subscribed'),
-            admin_access: localStorage.getItem('admin_access'), // Salvează statusul de admin
-            streak: localStorage.getItem('streak'),
-            last_log_date: localStorage.getItem('last_log_date'),
-            calories_goal: localStorage.getItem('calories_goal'),
-            protein_goal: localStorage.getItem('protein_goal'),
-            carbs_goal: localStorage.getItem('carbs_goal'),
-            fat_goal: localStorage.getItem('fat_goal')
-          };
-          localStorage.setItem('settings_' + userId, JSON.stringify(settings));
-
-          if(window.firebase && firebase.auth().currentUser) {
-            const db = firebase.firestore();
-            let macrosObj = {};
-            try { macrosObj = macros ? JSON.parse(macros) : {}; } catch(e) {}
-            const uid = firebase.auth().currentUser.uid;
-            const docRef = db.collection('users').doc(uid);
-            // Merge with existing progress so we don't lose older days if localStorage
-            // still doesn't contain everything (e.g., first restore after an update).
-            docRef.get().then(function(doc) {
-              let existing = {};
-              try {
-                if(doc && doc.exists && doc.data && doc.data().progress) existing = doc.data().progress;
-              } catch(e) {}
-              const mergedProgress = Object.assign({}, existing || {}, allLogs || {});
-              docRef.set({
-                progress: mergedProgress,
-                macros: macrosObj || {},
-                settings: settings || {},
-                updatedAt: new Date().toISOString()
-              }, {merge:true});
-            }).catch(function(){});
-          }
+        if (userId && window.AppDataStore) {
+          AppDataStore.saveToFirestore(userId);
         }
       }
       
-      // Funcție pentru restaurarea completă a progresului
+      // Restaurare din Firestore (apelat explicit dacă e nevoie)
       window.restoreUserProgress = function() {
         var userId = getUserId();
-        if(userId) {
-          isRestoringProgress = true;
-          // Reset Plus flag so it can't "leak" between Google accounts.
-          localStorage.removeItem('subscribed');
-          // Restaurează logurile
-          var saved = localStorage.getItem('progress_' + userId);
-          if(saved) {
-            try {
-              var logs = JSON.parse(saved);
-              for(var k in logs) {
-                // Don't overwrite logs that were created locally after the page opened
-                // (prevents losing the newest scans due to an older Firestore restore).
-                if(logs[k] !== null && logs[k] !== undefined) {
-                  if (localStorage.getItem(k) === null || localStorage.getItem(k) === undefined) {
-                    localStorage.setItem(k, logs[k]);
-                  }
-                }
-              }
-            } catch(e){}
-          }
-          
-          // Restaurează custom_macros
-          var macrosSaved = localStorage.getItem('macros_' + userId);
-          if(macrosSaved) {
-            localStorage.setItem('custom_macros', macrosSaved);
-          }
-          
-          // Restaurează setările
-          var settingsSaved = localStorage.getItem('settings_' + userId);
-          if(settingsSaved) {
-            try {
-              var settings = JSON.parse(settingsSaved);
-              for(var k in settings) {
-                if(settings[k] !== null && settings[k] !== undefined) localStorage.setItem(k, settings[k]);
-              }
-            } catch(e){}
-          }
-
-          if(window.firebase && firebase.auth().currentUser) {
-            const db = firebase.firestore();
-            db.collection('users').doc(firebase.auth().currentUser.uid).get().then(doc => {
-              if(doc.exists) {
-                const data = doc.data();
-                if(data.progress) {
-                  try {
-                    var logs = data.progress;
-                    for(var k in logs) {
-                      if(logs[k] !== null && logs[k] !== undefined) {
-                        if (localStorage.getItem(k) === null || localStorage.getItem(k) === undefined) {
-                          localStorage.setItem(k, logs[k]);
-                        }
-                      }
-                    }
-                  } catch(e){}
-                }
-                if(data.macros) {
-                  localStorage.setItem('custom_macros', JSON.stringify(data.macros));
-                }
-                if(data.settings) {
-                  try {
-                    var settings = data.settings;
-                    for(var k in settings) {
-                      if(settings[k] !== null && settings[k] !== undefined) localStorage.setItem(k, settings[k]);
-                    }
-                  } catch(e){}
-                }
-                ensureMacroConsistency();
-                if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-                if(window.loadGoals) window.loadGoals();
-              }
-              isRestoringProgress = false;
-            });
-            // If the request fails, don't block forever.
-            // (Also prevents accidental overwrites with onboarding defaults.)
-            db.collection('users').doc(firebase.auth().currentUser.uid).get().catch(function(){
-              isRestoringProgress = false;
-            });
-          }
-          // If Firestore isn't available for some reason, allow saving again.
-          else {
+        if (!userId || !window.AppDataStore) return;
+        isRestoringProgress = true;
+        if (AppDataStore.data.settings) delete AppDataStore.data.settings.subscribed;
+        AppDataStore.loadFromFirestore(userId)
+          .then(function () {
+            if (AppDataStore.mergeOnboardingFromSession()) {
+              return AppDataStore.saveToFirestore(userId).then(function () {
+                AppDataStore.clearOnboardingSession();
+              });
+            }
+          })
+          .finally(function () {
             isRestoringProgress = false;
-          }
-        }
+            ensureMacroConsistency();
+            if (window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+            if (window.loadGoals) window.loadGoals();
+          });
       }
       
       // La fiecare updateMacrosAndLogs, salvează progresul
@@ -1305,66 +1197,23 @@
         saveUserProgress(); // Salvează automat la fiecare modificare
       };
       
-      // La login, restaurează progresul
-      var userId = getUserId();
-      if(userId) {
-        restoreUserProgress();
-        ensureMacroConsistency();
-        // Reîncarcă și dashboard-ul după restaurare
-        if(window.updateMacrosAndLogs) window.updateMacrosAndLogs();
-        if(window.loadGoals) window.loadGoals();
-      }
-      
-      // La fiecare modificare de localStorage, salvează progresul
-      var originalSetItem = localStorage.setItem;
-      localStorage.setItem = function(key, value) {
-        originalSetItem.call(this, key, value);
-        // Dacă se modifică ceva important, salvează progresul
-        if(key.includes('log_') || key === 'custom_macros' || key === 'streak' || 
-           key.includes('_goal') || key === 'subscribed' || key === 'admin_access') {
-          saveUserProgress();
-        }
-      };
+      // Datele se încarcă în onAuthStateChanged (updateAuthUI)
       // Logout rapid
       var logoutBtn = document.getElementById('logoutBtn');
       if(logoutBtn) {
         logoutBtn.onclick = function() {
           suspendAutoSave = true;
           firebase.auth().signOut().finally(function() {
-            // Curățăm cache-ul local ca să nu se amestece progresul între conturi.
-            // (RestoreUserProgress nu suprascrie dacă logurile există deja în localStorage.)
             try {
-              var keys = [];
-              for (var i = 0; i < localStorage.length; i++) {
-                var k = localStorage.key(i);
-                if (!k) continue;
-                if (k.indexOf('log_') === 0) keys.push(k);
-              }
-              keys.forEach(function(k) { localStorage.removeItem(k); });
+              if (window.AppDataStore) AppDataStore.clear();
+              sessionStorage.removeItem('pending_upload_image');
+              sessionStorage.removeItem('upload_log_date');
+              sessionStorage.removeItem('pending_ai_output');
+              sessionStorage.removeItem('pending_ai_image');
+              sessionStorage.removeItem('pending_ai_log_date');
+              sessionStorage.removeItem('cal_google_session');
+            } catch (e) {}
 
-              // Goals / macro-uri / streak (date derivate, dar afectează UI și restore)
-              localStorage.removeItem('custom_macros');
-              localStorage.removeItem('calories_goal');
-              localStorage.removeItem('protein_goal');
-              localStorage.removeItem('carbs_goal');
-              localStorage.removeItem('fat_goal');
-              localStorage.removeItem('streak');
-              localStorage.removeItem('last_log_date');
-
-              // Upload state (opțional)
-              localStorage.removeItem('pending_ai_output');
-              localStorage.removeItem('pending_ai_image');
-              localStorage.removeItem('pending_ai_log_date');
-              localStorage.removeItem('pending_upload_image');
-              localStorage.removeItem('upload_log_date');
-            } catch(e) {}
-
-            localStorage.removeItem('logged_in');
-            localStorage.removeItem('user_id');
-            localStorage.removeItem('subscribed');
-            localStorage.removeItem('admin_access');
-
-            // Stay on home and show login UI/modal
             var forceModal = document.getElementById('forceLoginModal');
             if(forceModal) forceModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1380,6 +1229,24 @@
         var plusBadge = document.getElementById('plusBadge');
         firebase.auth().onAuthStateChanged(function(user) {
           if(user) {
+            try { sessionStorage.setItem('cal_google_session', '1'); } catch (e) {}
+            isRestoringProgress = true;
+            if (AppDataStore.data.settings) delete AppDataStore.data.settings.subscribed;
+            AppDataStore.loadFromFirestore(user.uid)
+              .then(function () {
+                if (AppDataStore.mergeOnboardingFromSession()) {
+                  return AppDataStore.saveToFirestore(user.uid).then(function () {
+                    AppDataStore.clearOnboardingSession();
+                  });
+                }
+              })
+              .finally(function () {
+                isRestoringProgress = false;
+                ensureMacroConsistency();
+                if (window.updateMacrosAndLogs) window.updateMacrosAndLogs();
+                if (window.loadGoals) window.loadGoals();
+                if(plusBadge) plusBadge.style.display = hasPlus() ? 'inline-flex' : 'none';
+              });
             if(loginBtn) loginBtn.style.display = 'none';
             if(userAvatar) {
               userAvatar.style.display = '';
@@ -1387,8 +1254,11 @@
               userAvatar.title = user.displayName || user.email || '';
             }
             if(logoutBtn) logoutBtn.style.display = '';
-            if(plusBadge) plusBadge.style.display = hasPlus() ? 'inline-flex' : 'none';
           } else {
+            try { sessionStorage.removeItem('cal_google_session'); } catch (e) {}
+            AppDataStore.clear();
+            ensureMacroConsistency();
+            if (window.updateMacrosAndLogs) window.updateMacrosAndLogs();
             if(loginBtn) loginBtn.style.display = '';
             if(userAvatar) userAvatar.style.display = 'none';
             if(logoutBtn) logoutBtn.style.display = 'none';

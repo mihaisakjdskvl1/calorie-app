@@ -9,7 +9,7 @@
     <div id="error" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;background:rgba(0,0,0,0.8);z-index:1000;text-align:center;"></div>
     <div id="result" style="display:none;"></div>
     <script>
-      const imgData = localStorage.getItem('pending_upload_image');
+      const imgData = sessionStorage.getItem('pending_upload_image');
       let lastOutput = null;
       function showError(msg) {
         const errorDiv = document.getElementById('error');
@@ -19,45 +19,7 @@
           window.location.href = 'home.html';
         };
       }
-      function saveScanToDailyLog(output, imageDataUrl) {
-        if (!output) return;
-        const today = new Date();
-        const dayKey = 'log_' + today.toDateString();
-        const logsBefore = JSON.parse(localStorage.getItem(dayKey) || '[]');
-        const firstScanToday = logsBefore.length === 0;
-        let logs = logsBefore;
-        const entry = {
-          food: output.description || 'Food',
-          calories: parseFloat(output.calories) || 0,
-          protein: parseFloat(output.protein) || 0,
-          carbs: parseFloat(output.carbs) || 0,
-          fat: parseFloat(output.fats) || parseFloat(output.fat) || 0,
-          time: today.getHours().toString().padStart(2,'0') + ':' + today.getMinutes().toString().padStart(2,'0'),
-          suggestion: output.health_suggestion || '',
-          image: imageDataUrl || null
-        };
-        logs.unshift(entry);
-        localStorage.setItem(dayKey, JSON.stringify(logs));
-        localStorage.setItem('last_scan_saved_at', today.toISOString());
-
-        // Streak update: increment only on the first scan of the day
-        if (firstScanToday) {
-          const todayKey = today.toDateString();
-          const yesterday = new Date(today);
-          yesterday.setDate(today.getDate() - 1);
-          const yesterdayKey = yesterday.toDateString();
-
-          let streak = parseInt(localStorage.getItem('streak') || '0', 10);
-          if (!Number.isFinite(streak) || streak < 0) streak = 0;
-          const lastLogDate = localStorage.getItem('last_log_date');
-
-          if (lastLogDate === yesterdayKey) streak = streak + 1;
-          else streak = 1;
-
-          localStorage.setItem('streak', String(streak));
-          localStorage.setItem('last_log_date', todayKey);
-        }
-      }
+      /* Logul final se salvează în Firestore din result.html (Done). */
       function normalizeWebhookResponse(data) {
         let d = data;
         if (Array.isArray(d)) d = d[0];
@@ -107,17 +69,14 @@
             (async () => {
               try {
                 const data = await postImageToWebhook({ blob, file, url });
-                localStorage.removeItem('pending_upload_image');
+                sessionStorage.removeItem('pending_upload_image');
                 const output = normalizeWebhookResponse(data);
                 lastOutput = output;
-                localStorage.setItem('last_ai_output', JSON.stringify(output));
-                localStorage.setItem('last_ai_image', imgData);
-                // Save to pending keys. Final logging (with quantity adjustments) happens in result.html.
-                localStorage.setItem('pending_ai_output', JSON.stringify(output));
-                localStorage.setItem('pending_ai_image', imgData);
-                const uploadLogDate = localStorage.getItem('upload_log_date') || new Date().toDateString();
-                localStorage.setItem('pending_ai_log_date', uploadLogDate);
-                localStorage.removeItem('upload_log_date');
+                sessionStorage.setItem('pending_ai_output', JSON.stringify(output));
+                sessionStorage.setItem('pending_ai_image', imgData);
+                const uploadLogDate = sessionStorage.getItem('upload_log_date') || new Date().toDateString();
+                sessionStorage.setItem('pending_ai_log_date', uploadLogDate);
+                sessionStorage.removeItem('upload_log_date');
                 window.location.href = 'result.html';
               } catch (err) {
                 const msg = (err && err.message) ? err.message : String(err || '');

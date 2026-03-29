@@ -163,7 +163,7 @@
 </head>
 <body>
   <script>
-    if (localStorage.getItem('logged_in') && localStorage.getItem('custom_macros')) {
+    if (sessionStorage.getItem('cal_google_session') === '1' && sessionStorage.getItem('onb_custom_macros')) {
       window.location.href = 'home.html';
     }
   </script>
@@ -197,7 +197,7 @@
     });
     document.getElementById('continueBtn').onclick = function() {
       if(selectedValue) {
-        localStorage.setItem('user_gender', selectedValue);
+        sessionStorage.setItem('user_gender', selectedValue);
         window.location.href = 'birthdate.html';
       }
     };

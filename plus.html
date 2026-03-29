@@ -59,6 +59,46 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrIsRUiKYGKyrD8i0wDa3SRZDNrlp2H_E",
+      authDomain: "logare-d7168.firebaseapp.com",
+      projectId: "logare-d7168",
+      storageBucket: "logare-d7168.appspot.com",
+      messagingSenderId: "575737128202",
+      appId: "1:575737128202:web:666bb22b5048f1030886f3",
+      measurementId: "G-DKJVYKE0H9"
+    };
+    if (typeof firebase !== 'undefined' && (!firebase.apps || !firebase.apps.length)) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    function unlockPlusInFirestoreThenHome() {
+      function write(uid) {
+        firebase.firestore().collection('users').doc(uid).set(
+          {
+            settings: { subscribed: '1' },
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        ).finally(function () {
+          window.location.href = 'home.html';
+        });
+      }
+      var u = firebase.auth().currentUser;
+      if (u) {
+        write(u.uid);
+        return;
+      }
+      var unsub = firebase.auth().onAuthStateChanged(function (user) {
+        unsub();
+        if (user) write(user.uid);
+        else window.location.href = 'home.html';
+      });
+    }
+  </script>
   <script>
     // Ține la fel ca `TEMP_PLUS_PAYMENT_DISABLED` din home.html.
     const TEMP_PLUS_PAYMENT_DISABLED = true;
@@ -100,13 +140,15 @@
 
     // If PayPal redirects back with a success flag, unlock immediately.
     if (!TEMP_PLUS_PAYMENT_DISABLED && shouldUnlockFromReturn()) {
-      localStorage.setItem('subscribed', '1');
-      window.location.href = 'home.html';
+      var unsub = firebase.auth().onAuthStateChanged(function (user) {
+        unsub();
+        if (user) unlockPlusInFirestoreThenHome();
+        else window.location.href = 'home.html';
+      });
     }
 
     function unlockAndGoHome() {
-      localStorage.setItem('subscribed', '1');
-      window.location.href = 'home.html';
+      unlockPlusInFirestoreThenHome();
     }
 
     function renderPayPalButtons() {

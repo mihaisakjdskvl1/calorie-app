@@ -50,6 +50,9 @@
           if (d.progress && typeof d.progress === 'object') AppData.progress = Object.assign({}, d.progress);
           if (d.macros && typeof d.macros === 'object') AppData.macros = Object.assign({}, d.macros);
           if (d.settings && typeof d.settings === 'object') AppData.settings = Object.assign({}, d.settings);
+        })
+        .catch(function (err) {
+          console.error('[AppDataStore] Firestore read failed:', err && err.code, err && err.message);
         });
     },
 
@@ -57,20 +60,32 @@
       if (!uid || !global.firebase) return Promise.resolve();
       var db = global.firebase.firestore();
       var ref = db.collection('users').doc(uid);
-      return ref.get().then(function (doc) {
-        var existing = {};
-        if (doc.exists && doc.data() && doc.data().progress) existing = doc.data().progress;
-        var mergedProgress = Object.assign({}, existing || {}, AppData.progress || {});
-        return ref.set(
-          {
-            progress: mergedProgress,
-            macros: AppData.macros || {},
-            settings: AppData.settings || {},
-            updatedAt: new Date().toISOString(),
-          },
-          { merge: true }
-        );
-      });
+      return ref
+        .get()
+        .then(function (doc) {
+          var d = doc.exists && doc.data ? doc.data() : {};
+          var existingProgress = (d.progress && typeof d.progress === 'object') ? d.progress : {};
+          var existingMacros = (d.macros && typeof d.macros === 'object') ? d.macros : {};
+          var existingSettings = (d.settings && typeof d.settings === 'object') ? d.settings : {};
+          var mergedProgress = Object.assign({}, existingProgress, AppData.progress || {});
+          var mergedMacros = Object.assign({}, existingMacros, AppData.macros || {});
+          var mergedSettings = Object.assign({}, existingSettings, AppData.settings || {});
+          AppData.progress = Object.assign({}, mergedProgress);
+          AppData.macros = Object.assign({}, mergedMacros);
+          AppData.settings = Object.assign({}, mergedSettings);
+          return ref.set(
+            {
+              progress: mergedProgress,
+              macros: mergedMacros,
+              settings: mergedSettings,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+        })
+        .catch(function (err) {
+          console.error('[AppDataStore] Firestore save failed:', err && err.code, err && err.message);
+        });
     },
 
     /** După onboarding (sessionStorage), la primul login pe home. */
@@ -115,48 +130,53 @@
       if (!uid || !global.firebase) return Promise.resolve();
       var db = global.firebase.firestore();
       var ref = db.collection('users').doc(uid);
-      return ref.get().then(function (doc) {
-        var progress = {};
-        var macros = {};
-        var settings = {};
-        if (doc.exists) {
-          var d = doc.data();
-          progress = (d.progress && typeof d.progress === 'object') ? Object.assign({}, d.progress) : {};
-          macros = (d.macros && typeof d.macros === 'object') ? Object.assign({}, d.macros) : {};
-          settings = (d.settings && typeof d.settings === 'object') ? Object.assign({}, d.settings) : {};
-        }
-        var logs = parseLog(progress[dayKey]);
-        var firstScanThatDay = logs.length === 0;
-        logs.unshift(entry);
-        progress[dayKey] = JSON.stringify(logs);
-
-        if (firstScanThatDay) {
-          var dateObj = new Date(logDateStr);
-          var todayKey = dateObj.toDateString();
-          var yesterday = new Date(dateObj);
-          yesterday.setDate(yesterday.getDate() - 1);
-          var yesterdayKey = yesterday.toDateString();
-          var streak = parseInt(settings.streak || '0', 10);
-          if (!Number.isFinite(streak) || streak < 0) streak = 0;
-          var lastLogDate = settings.last_log_date || '';
-          if (lastLogDate !== todayKey) {
-            if (lastLogDate === yesterdayKey) streak = streak + 1;
-            else streak = 1;
-            settings.streak = String(streak);
-            settings.last_log_date = todayKey;
+      return ref
+        .get()
+        .then(function (doc) {
+          var progress = {};
+          var macros = {};
+          var settings = {};
+          if (doc.exists) {
+            var d = doc.data();
+            progress = (d.progress && typeof d.progress === 'object') ? Object.assign({}, d.progress) : {};
+            macros = (d.macros && typeof d.macros === 'object') ? Object.assign({}, d.macros) : {};
+            settings = (d.settings && typeof d.settings === 'object') ? Object.assign({}, d.settings) : {};
           }
-        }
+          var logs = parseLog(progress[dayKey]);
+          var firstScanThatDay = logs.length === 0;
+          logs.unshift(entry);
+          progress[dayKey] = JSON.stringify(logs);
 
-        return ref.set(
-          {
-            progress: progress,
-            macros: macros,
-            settings: settings,
-            updatedAt: new Date().toISOString(),
-          },
-          { merge: true }
-        );
-      });
+          if (firstScanThatDay) {
+            var dateObj = new Date(logDateStr);
+            var todayKey = dateObj.toDateString();
+            var yesterday = new Date(dateObj);
+            yesterday.setDate(yesterday.getDate() - 1);
+            var yesterdayKey = yesterday.toDateString();
+            var streak = parseInt(settings.streak || '0', 10);
+            if (!Number.isFinite(streak) || streak < 0) streak = 0;
+            var lastLogDate = settings.last_log_date || '';
+            if (lastLogDate !== todayKey) {
+              if (lastLogDate === yesterdayKey) streak = streak + 1;
+              else streak = 1;
+              settings.streak = String(streak);
+              settings.last_log_date = todayKey;
+            }
+          }
+
+          return ref.set(
+            {
+              progress: progress,
+              macros: macros,
+              settings: settings,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+        })
+        .catch(function (err) {
+          console.error('[AppDataStore] appendLogEntryRemote failed:', err && err.code, err && err.message);
+        });
     },
   };
 })(typeof window !== 'undefined' ? window : this);

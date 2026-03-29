@@ -1042,18 +1042,27 @@
       return st.subscribed === '1' || st.subscribed === 1 || st.subscribed === true;
     }
     window.handleScanClick = function() {
-      // Must be logged in (Google) AND subscribed to Plus to access camera
-      if (!firebase.auth().currentUser) {
-        var forceModal = document.getElementById('forceLoginModal');
-        if (forceModal) forceModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+      function tryOpen() {
+        if (!firebase.auth().currentUser) {
+          var forceModal = document.getElementById('forceLoginModal');
+          if (forceModal) forceModal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+          return;
+        }
+        if (!hasPlus()) {
+          window.location.href = 'plus.html';
+          return;
+        }
+        window.openScanChoice();
+      }
+      if (firebase.auth().currentUser) {
+        tryOpen();
         return;
       }
-      if (!hasPlus()) {
-        window.location.href = 'plus.html';
-        return;
-      }
-      window.openScanChoice();
+      var unsub = firebase.auth().onAuthStateChanged(function () {
+        unsub();
+        tryOpen();
+      });
     };
 
     window.openScanChoice = function() {
@@ -1110,6 +1119,10 @@
       reader.readAsDataURL(file);
       e.target.value = '';
     });
+
+    // Primul paint (înainte ca Firestore să răspundă); altfel dashboard-ul rămâne gol.
+    ensureMacroConsistency();
+    updateMacrosAndLogs();
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', function() {
@@ -1239,6 +1252,9 @@
                     AppDataStore.clearOnboardingSession();
                   });
                 }
+              })
+              .catch(function (err) {
+                console.error('[home] Firestore load:', err && err.code, err && err.message);
               })
               .finally(function () {
                 isRestoringProgress = false;

@@ -1021,7 +1021,10 @@
       if (modal) modal.remove();
       document.body.style.overflow = '';
     }
+    // Plata (PayPal) dezactivată temporar: pune false când reactivezi abonamentul.
+    var TEMP_PLUS_PAYMENT_DISABLED = true;
     function hasPlus() {
+      if (TEMP_PLUS_PAYMENT_DISABLED) return true;
       return localStorage.getItem('subscribed') === '1';
     }
     window.handleScanClick = function() {

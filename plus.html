@@ -60,6 +60,21 @@
   </div>
 
   <script>
+    // Ține la fel ca `TEMP_PLUS_PAYMENT_DISABLED` din home.html.
+    const TEMP_PLUS_PAYMENT_DISABLED = true;
+
+    if (TEMP_PLUS_PAYMENT_DISABLED) {
+      document.querySelector('.title').textContent = 'Cal AI Plus';
+      var priceRow = document.querySelector('.price');
+      if (priceRow) priceRow.style.display = 'none';
+      document.querySelector('ul').innerHTML =
+        '<li>Plata este dezactivată temporar.</li><li>Folosește scanarea din dashboard (camera / galerie).</li>';
+      document.getElementById('fineText').textContent =
+        'Când reactivezi PayPal, setează TEMP_PLUS_PAYMENT_DISABLED = false în plus.html și home.html.';
+      document.getElementById('paypal-button-container').innerHTML =
+        '<button class="btn primary" type="button" onclick="window.location.href=\'home.html\'">Înapoi la dashboard</button>';
+    }
+
     // TODO: completează valorile din PayPal (Developer / Subscriptions)
     // - PAYPAL_CLIENT_ID: client-id pentru SDK
     // - PAYPAL_SUBSCRIPTION_PLAN_ID: plan-id pentru abonamentul lunar (15$ / month)
@@ -84,7 +99,7 @@
     }
 
     // If PayPal redirects back with a success flag, unlock immediately.
-    if (shouldUnlockFromReturn()) {
+    if (!TEMP_PLUS_PAYMENT_DISABLED && shouldUnlockFromReturn()) {
       localStorage.setItem('subscribed', '1');
       window.location.href = 'home.html';
     }
@@ -134,25 +149,27 @@
         .render('#paypal-button-container');
     }
 
-    // Încarcă PayPal SDK dinamic (ca să poți folosi client-id fără template).
-    (function loadPayPalSdk() {
-      if (window.paypal && window.paypal.Buttons) {
-        renderPayPalButtons();
-        return;
-      }
-      const script = document.createElement('script');
-      script.src =
-        'https://www.paypal.com/sdk/js?client-id=' +
-        encodeURIComponent(PAYPAL_CLIENT_ID) +
-        '&vault=true&intent=subscription';
-      script.onload = function() {
-        renderPayPalButtons();
-      };
-      script.onerror = function() {
-        setWarn('Nu am putut încărca PayPal SDK.');
-      };
-      document.head.appendChild(script);
-    })();
+    // Încarcă PayPal SDK doar când plata nu e dezactivată.
+    if (!TEMP_PLUS_PAYMENT_DISABLED) {
+      (function loadPayPalSdk() {
+        if (window.paypal && window.paypal.Buttons) {
+          renderPayPalButtons();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src =
+          'https://www.paypal.com/sdk/js?client-id=' +
+          encodeURIComponent(PAYPAL_CLIENT_ID) +
+          '&vault=true&intent=subscription';
+        script.onload = function() {
+          renderPayPalButtons();
+        };
+        script.onerror = function() {
+          setWarn('Nu am putut încărca PayPal SDK.');
+        };
+        document.head.appendChild(script);
+      })();
+    }
   </script>
 </body>
 </html>
